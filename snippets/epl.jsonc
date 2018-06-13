@@ -1,0 +1,230 @@
+{
+	"Monitor Declaration": {
+		"prefix": "monitor",
+		"body": [
+			// Monitor names usually match the filename, except:
+			// - Must start with a letter
+			// - Can't contain spaces
+			// - Generally PascalCase rather than kebab-case or snake_case
+			"/**",
+			" * ${3:This monitor is responsible for...}",
+			" */",
+			"monitor ${1:${TM_FILENAME_BASE/(?:^[\\W\\d_]*|\\s|-|_)+(.)/${1:/upcase}/g}} {",
+				"\taction onload() {",
+					"\t\t${2:log \"Started monitor $1.\";}",
+				"\t}",
+			"}"
+		]
+	},
+
+	"Event Declaration": {
+		"prefix": "event",
+		"body": [
+			// Event names often match the filename, except:
+			// - Must start with a letter
+			// - Can't contain spaces
+			// - Generally PascalCase rather than kebab-case or snake_case
+			"event ${1:${TM_FILENAME_BASE/(?:^[\\W\\d_]*|\\s|-|_)+(.)/${1:/upcase}/g}} {",
+				"\t${2:string stringField;}",
+			"}"
+		]
+	},
+
+	"Action Declaration": {
+		"prefix": "action",
+		"body": [
+			"/**",
+			" * ${6:Description of $1}",
+			" * @param ${7:paramName} ${8:Description of this param}",
+			" * @returns ${9:Description of the return value}",
+			" */",
+			"action ${1:actionName}(${2:string param}) ${3:returns ${4:string} }{",
+				"\t${5:throw com.apama.exceptions.Exception(\"Not yet implemented\", \"NotImplemented\");}",
+			"}"
+		]
+	},
+
+	"Static Action Declaration": {
+		"prefix": "static action",
+		"body": [
+			"/**",
+			" * ${6:Description of $1}",
+			" * @param ${7:paramName} ${8:Description of this param}",
+			" * @returns ${9:Description of the return value}",
+			" */",
+			"static action ${1:actionName}(${2:string param}) ${3:returns ${4:string} }{",
+				"\t${5:throw com.apama.exceptions.Exception(\"Not yet implemented\", \"NotImplemented\");}",
+			"}"
+		]
+	},
+
+	"For Loop": {
+		"prefix": "for",
+		"body": [
+			"for ${2:value} in ${1:seq} {",
+				"\t$3",
+			"}"
+		]
+	},
+
+	"While Loop": {
+		"prefix": "while",
+		"body": [
+			"while ${1:condition} {",
+				"\t$2",
+			"}"
+		]
+	},
+
+	"For i Loop": {
+		"prefix": "for i<n",
+		"body": [
+			"integer $2 := 0;",
+			"while ${2:i} < ${1:maxCount} {",
+				"\t$3",
+				"\t$2 := $2 + 1;",
+			"}"
+		]
+	},
+
+	"While i Loop": {
+		"prefix": "while i<n",
+		"body": [
+			"integer $2 := 0;",
+			"while ${2:i} < ${1:maxCount} {",
+				"\t$3",
+				"\t$2 := $2 + 1;",
+			"}"
+		]
+	},
+
+	"If Statement": {
+		"prefix": "if",
+		"body": [
+			"if ${1:condition} {",
+				"\t$2",
+			"}"
+		]
+	},
+
+	"If Else Statement": {
+		"prefix": "if-else",
+		"body": [
+			"if ${1:condition} {",
+				"\t$2",
+			"} else {",
+				"\t$3",
+			"}"
+		]
+	},
+
+	"Switch Statement": {
+		"prefix": "switch",
+		"body": [
+			"switch (${1:value}) {",
+				"\tcase: ${2:MyEvent} {",
+					"\t\t$3",
+				"\t}",
+			"}"
+		]
+	},
+
+	"SwitchDefault Statement": {
+		"prefix": "switch-default",
+		"body": [
+			"switch (${1:value}) {",
+				"\tcase: ${2:MyEvent} {",
+					"\t\t$3",
+				"\t}",
+				"\tdefault: {",
+					"\t\t$4",
+				"\t}",
+			"}"
+		]
+	},
+
+	"Ifpresent Statement": {
+		"prefix": "ifpresent",
+		"body": [
+			"ifpresent ${1:optionalValue} {",
+				"\t$2",
+			"}"
+		]
+	},
+
+	"Ifpresent As Statement": {
+		"prefix": "ifpresent-as",
+		"body": [
+			"ifpresent ${1:optionalValue} as ${2:name} {",
+				"\t$3",
+			"}"
+		]
+	},
+
+	"On Statement": {
+		"prefix": "on",
+		"body": [
+			"on ${1:MyEvent}($2) as ${3:myEvent} {",
+				"\t$4",
+			"}"
+		]
+	},
+
+	"On All Statement": {
+		"prefix": "on all",
+		"body": [
+			"on all ${1:MyEvent}($2) as ${3:myEvent} {",
+				"\t$4",
+			"}"
+		]
+	},
+
+	"Dictionary Type": {
+		"prefix": "dictionary<>",
+		"body": [
+			"dictionary<${1:KeyType}, ${2:ValueType}>"
+		]
+	},
+
+	"Sequence Type": {
+		"prefix": "sequence<>",
+		"body": [
+			"sequence<${1:Type}>"
+		]
+	},
+
+	"Optional Type": {
+		"prefix": "optional<>",
+		"body": [
+			"optional<${1:Type}>"
+		]
+	},
+
+	"Action Type": {
+		"prefix": "action<>",
+		"body": [
+			"action<${1:Type}>"
+		]
+	},
+
+	"Action Returns Type": {
+		"prefix": "action<>-returns",
+		"body": [
+			"action<${1:Type}> returns ${2:ReturnType}"
+		]
+	},
+
+	"Log": {
+		"prefix": "log",
+		"body": [
+			"log ${1:value} at ${2|INFO,DEBUG,WARN,ERROR|};"
+		]
+	},
+
+	"Private Keyword": {
+		"prefix": "private",
+		"body": [
+			"/** @private */ "
+		]
+	}
+}
