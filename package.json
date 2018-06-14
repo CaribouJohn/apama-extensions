@@ -1,11 +1,11 @@
 {
-  "name": "epl-syntax-highlighting",
-  "displayName": "epl-syntax-highlighting",
+  "name": "apama-extensions",
+  "displayName": "Apama Extensions",
   "description": "EPL language support for Apama",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "CaribouJohn",
   "repository": {
-    "url": "https://github.com/CaribouJohn/epl-syntax-highlighting"
+    "url": "https://github.com/CaribouJohn/vscode-apama-extensions"
   },
   "engines": {
     "vscode": "^1.24.0"
