@@ -1,6 +1,8 @@
 import {
     DebugSession,
-    InitializedEvent
+    InitializedEvent,
+	OutputEvent,
+	TerminatedEvent
 } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { CorrelatorRuntime } from './correlatorRuntime';
@@ -45,8 +47,28 @@ export class CorrelatorDebugSession extends DebugSession {
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         console.log("Launch requested");
 
-		this._runtime.start(args.correlatorPath, args.correlatorArgs);
+		const correlatorProcess = this._runtime.start(args.correlatorPath, []/*args.correlatorArgs*/);
+
+        correlatorProcess.stdout.setEncoding('utf8');
+        correlatorProcess.stderr.setEncoding('utf8');
+		correlatorProcess.stdout.on('data', (data: string) => this.sendEvent(new OutputEvent(data, 'stdout')));
+        correlatorProcess.stderr.on('data', (data: string) => this.sendEvent(new OutputEvent(data, 'stderr')));
+        correlatorProcess.once('close', (exitCode) => {
+			this.sendEvent(new OutputEvent("Correlator terminated with exit code: " + exitCode, 'console'));
+			this.sendEvent(new TerminatedEvent());
+        });
 
 		this.sendResponse(response);
-    }
+	}
+	
+	/**
+	 * Frontend requested that the application terminate
+	 */
+	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
+		console.log("Stop requested");
+		
+		this._runtime.stop(() => {
+			this.sendResponse(response);
+		});
+	}
 }
