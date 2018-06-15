@@ -10,10 +10,10 @@ import { CorrelatorRuntime } from './correlatorRuntime';
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	/** Path to Apama Home directory. */
     apamaHome: string;
-    /** Path to correlator executable. */
-    correlatorPath: string;
     /** Argument list to provide to the correlator at startup */
-    correlatorArgs: string[];
+	correlatorArgs: string[];
+	/** List of files to inject ionto the correlator */
+	injectionList: string[];
 }
 
 export class CorrelatorDebugSession extends DebugSession {
@@ -47,16 +47,16 @@ export class CorrelatorDebugSession extends DebugSession {
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         console.log("Launch requested");
 
-		const correlatorProcess = this._runtime.start(args.correlatorPath, []/*args.correlatorArgs*/);
+		const correlatorProcess = this._runtime.start(args.apamaHome, args.correlatorArgs);
 
-        correlatorProcess.stdout.setEncoding('utf8');
         correlatorProcess.stderr.setEncoding('utf8');
-		correlatorProcess.stdout.on('data', (data: string) => this.sendEvent(new OutputEvent(data, 'stdout')));
         correlatorProcess.stderr.on('data', (data: string) => this.sendEvent(new OutputEvent(data, 'stderr')));
-        correlatorProcess.once('close', (exitCode) => {
+        correlatorProcess.once('exit', (exitCode) => {
 			this.sendEvent(new OutputEvent("Correlator terminated with exit code: " + exitCode, 'console'));
 			this.sendEvent(new TerminatedEvent());
         });
+
+		this._runtime.injectFiles(args.apamaHome, args.injectionList);
 
 		this.sendResponse(response);
 	}
@@ -67,8 +67,6 @@ export class CorrelatorDebugSession extends DebugSession {
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
 		console.log("Stop requested");
 		
-		this._runtime.stop(() => {
-			this.sendResponse(response);
-		});
+		this._runtime.stop().then(() => this.sendResponse(response));
 	}
 }
