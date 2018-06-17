@@ -3,12 +3,17 @@ import {
     InitializedEvent,
 	OutputEvent,
 	TerminatedEvent,
-	Breakpoint
+	Breakpoint,
+	StoppedEvent,
+	Thread,
+	StackFrame,
+	Source
 } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { CorrelatorRuntime } from './correlatorRuntime';
 import { Uri } from 'vscode';
 import { CorrelatorHttpInterface, CorrelatorBreakpoint } from './correlatorHttpInterface';
+import { basename } from 'path';
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	/** Path to Apama Home directory. */
@@ -129,15 +134,64 @@ export class CorrelatorDebugSession extends DebugSession {
     protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
 		console.log('Configuration done');
 		this.correlatorHttp.resume()
-			.then(() => this.sendResponse(response));
+			.then(() => this.sendResponse(response))
+			.then(() => this.waitForCorrelatorPause());
 	}
 	
 	/**
 	 * Frontend requested that the application terminate
 	 */
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
-		console.log("Stop requested");		
+		console.log("Stop requested");
 		this._runtime.stop().then(() => this.sendResponse(response));
+	}
+
+	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
+		console.log("Threads requested");
+		this.correlatorHttp.getContextStatus()
+			.then(contextStatuses => contextStatuses.map(status => new Thread(status.contextid, status.context)))
+			.then(threads => {
+				response.body = {
+					threads
+				};
+				this.sendResponse(response);
+			});		
+	}
+
+	/**
+	 * Frontend requested stacktrace
+	 */
+    protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
+		console.log("Stacktrace requested");
+		this.correlatorHttp.getStackTrace(args.threadId)
+			.catch((e) => {debugger; throw e;})
+			.then(correlatorStackFrames => correlatorStackFrames.stackframes.map((stackframe, i) => new StackFrame(correlatorStackFrames.contextid * 1000 + i, stackframe.action, this.createSource(stackframe.filename), stackframe.lineno)))
+			.then(stackFrames => {
+				response.body = {
+					stackFrames
+				};
+				this.sendResponse(response);
+			});
+	}
+
+    protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
+		console.log("Variables requested");
+		this.sendResponse(response);
+	}
+
+    protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
+		console.log("Continue requested");
+		this.correlatorHttp.resume()
+			.then(() => this.sendResponse(response));
+	}
+
+	private waitForCorrelatorPause() {
+		this.correlatorHttp.awaitPause()
+			.then(paused => this.sendEvent(new StoppedEvent(paused.reason, paused.contextid)));
+	}
+
+	private createSource(filePath: string): Source {
+		return new Source(basename(filePath), normalizeCorrelatorFilePath(filePath), undefined, undefined, 'hello');
 	}
 }
 
