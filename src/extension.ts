@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import * as Net from 'net';
-import { CorrelatorDebugSession } from './correlatorDebugSession';
+import { CorrelatorDebugSession, normalizeCorrelatorFilePath } from './correlatorDebugSession';
 import { platform } from 'os';
 import { execFileSync } from 'child_process';
 import {EPLCompletionItemProvider} from './eplCompletionProvider';
@@ -107,5 +107,6 @@ function getInjectionList(apamaHome: string, workspaceFolderPath: string) {
             encoding: 'utf8'
         })
         .split(/\r?\n/)
-        .filter(fileName => fileName !== '');
+        .filter(fileName => fileName !== '')
+        .map(normalizeCorrelatorFilePath);
 }

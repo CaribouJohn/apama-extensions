@@ -22,8 +22,7 @@ export class CorrelatorRuntime {
         this.stdoutChannel = vscode.window.createOutputChannel('Apama Correlator');
         this.stdoutChannel.show();
 
-        this.correlatorProcess = spawn(apamaHome + '/bin/correlator', correlatorArgs, {
-            detached: true,
+        this.correlatorProcess = spawn(apamaHome + '/bin/correlator', ["-g"].concat(correlatorArgs), {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 

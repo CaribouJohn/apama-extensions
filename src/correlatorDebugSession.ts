@@ -2,10 +2,13 @@ import {
     DebugSession,
     InitializedEvent,
 	OutputEvent,
-	TerminatedEvent
+	TerminatedEvent,
+	Breakpoint
 } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { CorrelatorRuntime } from './correlatorRuntime';
+import { Uri } from 'vscode';
+import { CorrelatorHttpInterface, CorrelatorBreakpoint } from './correlatorHttpInterface';
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	/** Path to Apama Home directory. */
@@ -16,17 +19,24 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	injectionList: string[];
 }
 
+/**
+ * Handles debug requests from the frontend
+ * Order of events received:
+ * - Initialize
+ * - Launch
+ * (After Initialized sent back to client)
+ * - SetBreakpoint (Zero or more)
+ * - ConfigurationDone
+ */
 export class CorrelatorDebugSession extends DebugSession {
 	private _runtime: CorrelatorRuntime;
+	private correlatorHttp: CorrelatorHttpInterface;
 
 	public constructor() {
 		super();
-
-		// this debugger uses zero-based lines and columns
-		this.setDebuggerLinesStartAt1(false);
-		this.setDebuggerColumnsStartAt1(false);
-
 		this._runtime = new CorrelatorRuntime();
+		
+		this.correlatorHttp = new CorrelatorHttpInterface('http://localhost', 15903);
 	}
 
 	/**
@@ -36,7 +46,10 @@ export class CorrelatorDebugSession extends DebugSession {
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         console.log("Initialize called");
 
-		this.sendEvent(new InitializedEvent());
+		response.body = {
+			supportsConfigurationDoneRequest: true,
+			supportsFunctionBreakpoints: false
+		};
 
 		this.sendResponse(response);
 	}
@@ -56,17 +69,78 @@ export class CorrelatorDebugSession extends DebugSession {
 			this.sendEvent(new TerminatedEvent());
         });
 
-		this._runtime.injectFiles(args.apamaHome, args.injectionList);
+		this.correlatorHttp.enableDebugging()
+			.then(() => this.correlatorHttp.pause()) // Pause correlator while we wait for the configuration to finish, we want breakpoints to be set first
+			.then(() => this._runtime.injectFiles(args.apamaHome, args.injectionList))
+			.then(() => this.sendEvent(new InitializedEvent())) // We're ready to start recieving breakpoints
+			.then(() => this.sendResponse(response));
+	}
 
-		this.sendResponse(response);
+    /**
+     * Frontend requested that breakpoints be set
+     */
+    protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
+		console.log('Breakpoints requested');
+		// TODO: It'll probably set the breakpoints twice in a file if a new breakpoint is added while running - so we should fix that
+		if (args.source.path) {
+			const filePath = normalizeCorrelatorFilePath(args.source.path);
+
+			// Attempt to set all of the breakpoints
+			const breakpointIds = (args.lines || [])
+				.map(lineNumber => this.correlatorHttp.setBreakpoint(filePath, lineNumber).catch((e) => null));
+			Promise.all(breakpointIds)
+				// Ask the correlator which breakpoints have been set
+				.then(breakpointIds => {
+					return this.correlatorHttp.getAllSetBreakpoints()
+						.then(setBreakpoints => setBreakpoints.reduce((acc, breakpoint) => {
+								acc[breakpoint.id] = breakpoint;
+								return acc;
+							}, {} as { [key: string]: CorrelatorBreakpoint }))
+						.then(setBreakpointsById => ({ setBreakpointsById, breakpointIds }));
+				})
+				// Compare the attempted and the actually set to determine whether they've actually been set (and on which line)
+				.then(({setBreakpointsById, breakpointIds}) => {
+					response.body = {
+						breakpoints: breakpointIds.map(id => {
+							if (id && setBreakpointsById[id]) {
+								// Successful breakpoint
+								return new Breakpoint(true, setBreakpointsById[id].line);
+							} else {
+								// Breakpoint failed to be set
+								return new Breakpoint(false);
+							}
+						})
+					};
+					// Send the response with the list of breakpoints
+					this.sendResponse(response);
+				})
+				.catch(() => {
+					debugger;
+				});
+		} else {
+			console.error("Unable to set breakpoints, no file path provided");
+			this.sendResponse(response);
+		}
+	}
+
+	/**
+	 * Indication that the frontend is done setting breakpoints etc
+	 */
+    protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
+		console.log('Configuration done');
+		this.correlatorHttp.resume()
+			.then(() => this.sendResponse(response));
 	}
 	
 	/**
 	 * Frontend requested that the application terminate
 	 */
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
-		console.log("Stop requested");
-		
+		console.log("Stop requested");		
 		this._runtime.stop().then(() => this.sendResponse(response));
 	}
+}
+
+export function normalizeCorrelatorFilePath(filePath: string): string {
+	return Uri.parse(filePath).fsPath;
 }
