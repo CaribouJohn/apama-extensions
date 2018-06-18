@@ -182,7 +182,27 @@ export class CorrelatorDebugSession extends DebugSession {
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
 		console.log("Continue requested");
 		this.correlatorHttp.resume()
-			.then(() => this.sendResponse(response));
+			.then(() => this.sendResponse(response))
+			.then(() => this.waitForCorrelatorPause());
+	}
+
+	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
+		console.log("Next requested");
+		this.correlatorHttp.stepOver()
+			.then(() => this.sendResponse(response))
+			.then(() => this.waitForCorrelatorPause());
+	}
+    protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
+		console.log("Step In requested");
+		this.correlatorHttp.stepIn()
+			.then(() => this.sendResponse(response))
+			.then(() => this.waitForCorrelatorPause());
+	}
+    protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
+		console.log("Step Out requested");
+		this.correlatorHttp.stepOut()
+			.then(() => this.sendResponse(response))
+			.then(() => this.waitForCorrelatorPause());
 	}
 
 	private waitForCorrelatorPause() {

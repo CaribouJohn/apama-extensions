@@ -96,6 +96,21 @@ export class CorrelatorHttpInterface {
         return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/run`, { body });
     }
 
+    public async stepIn(): Promise<void> {
+        const body = '<map name="apama-request"></map>';
+        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/step`, { body });
+    }
+
+    public async stepOver(): Promise<void> {
+        const body = '<map name="apama-request"></map>';
+        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/stepover`, { body });
+    }
+
+    public async stepOut(): Promise<void> {
+        const body = '<map name="apama-request"></map>';
+        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/stepout`, { body });
+    }
+
     public async awaitPause(): Promise<CorrelatorPaused> {
         return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress/wait`)
             .catch(e => {
