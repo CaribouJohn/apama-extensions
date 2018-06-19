@@ -202,23 +202,23 @@ export class CorrelatorDebugSession extends DebugSession {
 		const { contextid, frameidx, type } = this.parseVariablesRef(args.variablesReference);
 
 		this.getVariablesForType(type, contextid, frameidx)
-			.then(locals => locals
-				.filter(local => local.value !== '<uninitialized>')
-				.filter(local => !local.name.startsWith("::"))
-				// Can end up with duplicate names for variables when locals hide variables in other scopes (which is super annoying), so we number them.
-				.map((local, i, locals) => {
-					const count = locals.slice(0, i + 1).filter(otherLocal => otherLocal.name === local.name).length;
+			.then(variables => variables
+				.filter(variable => variable.value !== '<uninitialized>')
+				.filter(variable => !variable.name.startsWith("::"))
+				// Can end up with duplicate names for variables when used in other scopes (which is super annoying), so we number them.
+				.map((variable, i, variables) => {
+					const count = variables.slice(0, i + 1).filter(otherVariable => otherVariable.name === variable.name).length;
 					if (count > 1) {
-						local.name = `${local.name}#${count}`;
+						variable.name = `${variable.name}#${count}`;
 					}
-					return local;
+					return variable;
 				})
 			)
-			.then(locals => locals.map(local => new Variable(local.name, local.value)))
+			.then(variables => variables.map(variable => new Variable(variable.name, variable.value)))
 			.then(variables => {
 				response.body = {
 					variables
-				}
+				};
 				this.sendResponse(response);
 			});
 	}
@@ -264,7 +264,7 @@ export class CorrelatorDebugSession extends DebugSession {
 	}
 
 	private createSource(filePath: string): Source {
-		return new Source(basename(filePath), normalizeCorrelatorFilePath(filePath), undefined, undefined, 'hello');
+		return new Source(basename(filePath), normalizeCorrelatorFilePath(filePath));
 	}
 
 	private createFrameId(contextId: number, frameidx: number): number {
@@ -281,12 +281,22 @@ export class CorrelatorDebugSession extends DebugSession {
 	}
 
 	private createVariablesRef(frameId: number, variableType: 'monitor' | 'local'): number {
-		return frameId * 10 + (variableType === 'monitor' ? 1 : 0);
+		let typeNumber = 0;
+		switch (variableType) {
+			case 'monitor': typeNumber = 0; break;
+			case 'local': typeNumber = 1; break;
+		}
+		return frameId * 10 + typeNumber;
 	}
 
 	private parseVariablesRef(variablesRef: number): { type: 'monitor' | 'local', contextid: number, frameidx: number } {
 		const typeNumber = variablesRef % 10;
-		const type = typeNumber === 1 ? 'monitor' : 'local';
+		let type: 'monitor' | 'local';
+		switch (typeNumber) {
+			case 0: type = 'local'; break;
+			case 1: type = 'monitor'; break;
+			default: throw Error("Unknown type code: " + typeNumber);
+		}
 		const { contextid, frameidx } = this.parseFrameId((variablesRef - typeNumber) / 10);
 		return {
 			type,
@@ -296,21 +306,20 @@ export class CorrelatorDebugSession extends DebugSession {
 	}
 
 	private getVariablesForType(type: 'monitor' | 'local', contextid: number, frameidx: number) {
-		if (type === 'monitor') {
-			return this.correlatorHttp.getContextStatuses()
+		switch (type) {
+			case 'monitor': return this.correlatorHttp.getContextStatuses()
 				.then(contextStatuses => contextStatuses.find(contextStatus => contextStatus.contextid === contextid))
 				.then(possiblePause => {
 					if (!possiblePause) { 
 						throw Error("Trying to read variables from non existent context: " + contextid);
-				   	} 
+					} 
 					if (!possiblePause.paused) { 
-						 throw Error("Trying to read variables from unpaused context: " + contextid);
+						throw Error("Trying to read variables from unpaused context: " + contextid);
 					} 
 					return possiblePause as CorrelatorPaused; 
 				})
 				.then(pause => this.correlatorHttp.getMonitorVariables(contextid, pause.instance));
-		} else {
-			return this.correlatorHttp.getLocalVariables(contextid, frameidx);
+			case 'local': return this.correlatorHttp.getLocalVariables(contextid, frameidx);
 		}
 	}
 }
