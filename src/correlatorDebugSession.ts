@@ -7,13 +7,17 @@ import {
 	StoppedEvent,
 	Thread,
 	StackFrame,
-	Source
+	Source,
+	Scope,
+	Variable
 } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { CorrelatorRuntime } from './correlatorRuntime';
 import { Uri } from 'vscode';
-import { CorrelatorHttpInterface, CorrelatorBreakpoint } from './correlatorHttpInterface';
+import { CorrelatorHttpInterface, CorrelatorBreakpoint, CorrelatorPaused } from './correlatorHttpInterface';
 import { basename } from 'path';
+
+const MAX_STACK_SIZE = 1000;
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	/** Path to Apama Home directory. */
@@ -51,10 +55,19 @@ export class CorrelatorDebugSession extends DebugSession {
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         console.log("Initialize called");
 
-		response.body = {
-			supportsConfigurationDoneRequest: true,
-			supportsFunctionBreakpoints: false
-		};
+		if (!response.body) {
+			response.body = {};
+		}
+
+		response.body.supportsConfigurationDoneRequest = true;
+		response.body.supportsFunctionBreakpoints = false;
+		response.body.exceptionBreakpointFilters = [
+			{
+				label: "Uncaught Exceptions",
+				filter: 'uncaught',
+				default: true
+			}
+		];
 
 		this.sendResponse(response);
 	}
@@ -148,7 +161,7 @@ export class CorrelatorDebugSession extends DebugSession {
 
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
 		console.log("Threads requested");
-		this.correlatorHttp.getContextStatus()
+		this.correlatorHttp.getContextStatuses()
 			.then(contextStatuses => contextStatuses.map(status => new Thread(status.contextid, status.context)))
 			.then(threads => {
 				response.body = {
@@ -164,8 +177,7 @@ export class CorrelatorDebugSession extends DebugSession {
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
 		console.log("Stacktrace requested");
 		this.correlatorHttp.getStackTrace(args.threadId)
-			.catch((e) => {debugger; throw e;})
-			.then(correlatorStackFrames => correlatorStackFrames.stackframes.map((stackframe, i) => new StackFrame(correlatorStackFrames.contextid * 1000 + i, stackframe.action, this.createSource(stackframe.filename), stackframe.lineno)))
+			.then(correlatorStackFrames => correlatorStackFrames.stackframes.map((stackframe, i) => new StackFrame(this.createFrameId(correlatorStackFrames.contextid, i), stackframe.action, this.createSource(stackframe.filename), stackframe.lineno)))
 			.then(stackFrames => {
 				response.body = {
 					stackFrames
@@ -174,9 +186,41 @@ export class CorrelatorDebugSession extends DebugSession {
 			});
 	}
 
+	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
+		console.log("Scopes requested");
+		response.body = {
+			scopes: [
+				new Scope("Local", this.createVariablesRef(args.frameId, 'local')),
+				new Scope("Monitor", this.createVariablesRef(args.frameId, 'monitor'))
+			] 
+		}
+		this.sendResponse(response);		
+	}
+
     protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
 		console.log("Variables requested");
-		this.sendResponse(response);
+		const { contextid, frameidx, type } = this.parseVariablesRef(args.variablesReference);
+
+		this.getVariablesForType(type, contextid, frameidx)
+			.then(locals => locals
+				.filter(local => local.value !== '<uninitialized>')
+				.filter(local => !local.name.startsWith("::"))
+				// Can end up with duplicate names for variables when locals hide variables in other scopes (which is super annoying), so we number them.
+				.map((local, i, locals) => {
+					const count = locals.slice(0, i + 1).filter(otherLocal => otherLocal.name === local.name).length;
+					if (count > 1) {
+						local.name = `${local.name}#${count}`;
+					}
+					return local;
+				})
+			)
+			.then(locals => locals.map(local => new Variable(local.name, local.value)))
+			.then(variables => {
+				response.body = {
+					variables
+				}
+				this.sendResponse(response);
+			});
 	}
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
@@ -192,17 +236,26 @@ export class CorrelatorDebugSession extends DebugSession {
 			.then(() => this.sendResponse(response))
 			.then(() => this.waitForCorrelatorPause());
 	}
+
     protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
 		console.log("Step In requested");
 		this.correlatorHttp.stepIn()
 			.then(() => this.sendResponse(response))
 			.then(() => this.waitForCorrelatorPause());
 	}
+
     protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
 		console.log("Step Out requested");
 		this.correlatorHttp.stepOut()
 			.then(() => this.sendResponse(response))
 			.then(() => this.waitForCorrelatorPause());
+	}
+
+    protected setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments): void {
+		console.log("Exception breakpoint requested");
+		const breakOnUncaught = args.filters.indexOf('uncaught') !== -1;
+		this.correlatorHttp.setBreakOnErrors(breakOnUncaught)
+			.then(() => this.sendResponse(response));
 	}
 
 	private waitForCorrelatorPause() {
@@ -212,6 +265,53 @@ export class CorrelatorDebugSession extends DebugSession {
 
 	private createSource(filePath: string): Source {
 		return new Source(basename(filePath), normalizeCorrelatorFilePath(filePath), undefined, undefined, 'hello');
+	}
+
+	private createFrameId(contextId: number, frameidx: number): number {
+		return contextId * MAX_STACK_SIZE + frameidx;
+	}
+
+	private parseFrameId(frameid: number): { contextid: number, frameidx: number} {
+		const frameidx = frameid % MAX_STACK_SIZE;
+		const contextid = (frameid - frameidx) / MAX_STACK_SIZE;
+		return {
+			contextid,
+			frameidx
+		}
+	}
+
+	private createVariablesRef(frameId: number, variableType: 'monitor' | 'local'): number {
+		return frameId * 10 + (variableType === 'monitor' ? 1 : 0);
+	}
+
+	private parseVariablesRef(variablesRef: number): { type: 'monitor' | 'local', contextid: number, frameidx: number } {
+		const typeNumber = variablesRef % 10;
+		const type = typeNumber === 1 ? 'monitor' : 'local';
+		const { contextid, frameidx } = this.parseFrameId((variablesRef - typeNumber) / 10);
+		return {
+			type,
+			contextid,
+			frameidx
+		};
+	}
+
+	private getVariablesForType(type: 'monitor' | 'local', contextid: number, frameidx: number) {
+		if (type === 'monitor') {
+			return this.correlatorHttp.getContextStatuses()
+				.then(contextStatuses => contextStatuses.find(contextStatus => contextStatus.contextid === contextid))
+				.then(possiblePause => {
+					if (!possiblePause) { 
+						throw Error("Trying to read variables from non existent context: " + contextid);
+				   	} 
+					if (!possiblePause.paused) { 
+						 throw Error("Trying to read variables from unpaused context: " + contextid);
+					} 
+					return possiblePause as CorrelatorPaused; 
+				})
+				.then(pause => this.correlatorHttp.getMonitorVariables(contextid, pause.instance));
+		} else {
+			return this.correlatorHttp.getLocalVariables(contextid, frameidx);
+		}
 	}
 }
 

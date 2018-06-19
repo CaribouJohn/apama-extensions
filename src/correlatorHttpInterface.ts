@@ -23,7 +23,7 @@ export interface CorrelatorPaused extends CorrelatorContextState {
     owner: string;
     type: string;
     action: string;
-    instance: string;
+    instance: number;
     monitor: string;
     filename: string;
     filehash: string;
@@ -44,6 +44,12 @@ export interface CorrelatorStackTrace {
     contextid: number;
     monitor: string;
     stackframes: CorrelatorStackFrame[];
+}
+
+export interface CorrelatorVariable {
+    name: string;
+    type: string;
+    value: string;
 }
 
 export class CorrelatorHttpInterface {
@@ -112,7 +118,7 @@ export class CorrelatorHttpInterface {
     }
 
     public async awaitPause(): Promise<CorrelatorPaused> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress/wait`)
+        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress/wait`, { timeout: 15000 }) // Timeout has to be smaller than apama's timeout else you get a message in the logs
             .catch(e => {
                 // If the await timed out (but not during connection) then just recreate it
                 if (e.code === ETIMEDOUT && !e.connect) {
@@ -129,28 +135,47 @@ export class CorrelatorHttpInterface {
                 owner: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="owner"]//text())', dom),
                 type: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="type"]//text())', dom),
                 action: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="action"]//text())', dom),
-                instance: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="instance"]//text())', dom),
+                instance: parseInt(xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="instance"]//text())', dom)),
                 monitor: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="monitor"]//text())', dom),
                 filename: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="filename"]//text())', dom),
                 filehash: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="filehash"]//text())', dom),
                 reason: xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="reason"]//text())', dom),
-                line: parseInt(xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="context"]//text())', dom))
+                line: parseInt(xpath.select1('string(/map[@name="apama-response"]/map[@name="contextprogress"]/prop[@name="line"]//text())', dom))
             }));
     }
 
-    public async getContextStatus(): Promise<CorrelatorContextState[]> {
+    public async getContextStatuses(): Promise<(CorrelatorContextState | CorrelatorPaused)[]> {
         return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress`)
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => xpath.select('/map[@name="apama-response"]/list[@name="progress"]/map[@name="contextprogress"]', dom))
             // Have to convert back to a string and then back to dom because this xpath implementation only finds from root node
             .then(contextStatusNodes => contextStatusNodes.map(contextStatusNode => contextStatusNode.toString()))
             .then(contextStatusStrings => contextStatusStrings.map(contextStatusString => new DOMParser().parseFromString(contextStatusString, 'text/xml')))
-            .then(doms => doms.map(dom => ({
-                    context: xpath.select1('string(/map/prop[@name="context"]//text())', dom),
-                    contextid: parseInt(xpath.select1('string(/map/prop[@name="contextid"]//text())', dom)),
-                    paused: xpath.select1('string(/map/prop[@name="paused"]//text())', dom) === 'true'
-                })
-            ));
+            .then(doms => doms.map(dom => {
+                const paused = xpath.select1('string(/map/prop[@name="paused"]//text())', dom) === 'true';
+                if (paused) {
+                    return {
+                        context: xpath.select1('string(/map/prop[@name="context"]//text())', dom),
+                        contextid: parseInt(xpath.select1('string(/map/prop[@name="contextid"]//text())', dom)),
+                        paused,
+                        owner: xpath.select1('string(/map/prop[@name="owner"]//text())', dom),
+                        type: xpath.select1('string(/map/prop[@name="type"]//text())', dom),
+                        action: xpath.select1('string(/map/prop[@name="action"]//text())', dom),
+                        instance: parseInt(xpath.select1('string(/map/prop[@name="instance"]//text())', dom)),
+                        monitor: xpath.select1('string(/map/prop[@name="monitor"]//text())', dom),
+                        filename: xpath.select1('string(/map/prop[@name="filename"]//text())', dom),
+                        filehash: xpath.select1('string(/map/prop[@name="filehash"]//text())', dom),
+                        reason: xpath.select1('string(/map/prop[@name="reason"]//text())', dom),
+                        line: parseInt(xpath.select1('string(/map/prop[@name="line"]//text())', dom))
+                    };
+                } else {
+                    return {
+                        context: xpath.select1('string(/map/prop[@name="context"]//text())', dom),
+                        contextid: parseInt(xpath.select1('string(/map/prop[@name="contextid"]//text())', dom)),
+                        paused
+                    };
+                }
+            }));
     }
 
     public async getStackTrace(contextid: number): Promise<CorrelatorStackTrace> {
@@ -172,5 +197,54 @@ export class CorrelatorHttpInterface {
                         filehash: xpath.select1('string(/map/prop[@name="filehash"]//text())', dom)
                     }))
             }));
+    }
+
+    public async getLocalVariables(contextid: number, frameidx: number): Promise<CorrelatorVariable[]> {
+        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress/locals/id:${contextid};${frameidx}`)
+            .then(response => new DOMParser().parseFromString(response, 'text/xml'))
+            .then(dom => xpath.select('/map[@name="apama-response"]/list[@name="locals"]/map[@name="variable"]', dom))
+            // Have to convert the found nodes back to a string and then back to dom because this xpath implementation only finds from root node
+            .then(nodes => nodes.map(node => node.toString()))
+            .then(nodeStrings => nodeStrings.map(nodeString => new DOMParser().parseFromString(nodeString, 'text/xml')))
+            .then(doms => doms.map((dom) => ({
+                    name: xpath.select1('string(/map/prop[@name="name"]//text())', dom),
+                    type: xpath.select1('string(/map/prop[@name="type"]//text())', dom),
+                    value: xpath.select1('string(/map/prop[@name="value"]//text())', dom)
+                })
+            ));
+    }
+
+    public async getMonitorVariables(contextid: number, instance: number): Promise<CorrelatorVariable[]> {
+        return requestPromise.get(`${this.host}:${this.port}/correlator/contexts/id:${contextid}/${instance}`)
+            .then(response => new DOMParser().parseFromString(response, 'text/xml'))
+            .then(dom => xpath.select('/map[@name="apama-response"]/list[@name="mthread"]/map[@name="variable"]', dom))
+            // Have to convert the found nodes back to a string and then back to dom because this xpath implementation only finds from root node
+            .then(nodes => nodes.map(node => node.toString()))
+            .then(nodeStrings => nodeStrings.map(nodeString => new DOMParser().parseFromString(nodeString, 'text/xml')))
+            .then(doms => Promise.all(doms.map((dom) => {
+                const name = xpath.select1('string(/map/prop[@name="name"]//text())', dom);
+                return this.getMonitorVariableValue(contextid, instance, name)
+                    .then(value => ({
+                        name,
+                        type: xpath.select1('string(/map/prop[@name="type"]//text())', dom),
+                        value
+                    }));
+                })
+            ));
+    }
+
+    public async getMonitorVariableValue(contextid: number, instance: number, variableName: string): Promise<string> {
+        return requestPromise.get(`${this.host}:${this.port}/correlator/contexts/id:${contextid}/${instance}/${variableName}`)
+            .then(response => new DOMParser().parseFromString(response, 'text/xml'))
+            .then(dom => xpath.select1('string(/map[@name="apama-response"]/prop[@name="value"]//text())', dom));
+    }
+
+    public async setBreakOnErrors(breakOnErrors: boolean): Promise<void> {
+        const body = '<map name="apama-request"></map>';
+        if (breakOnErrors) {
+            return requestPromise.put(`${this.host}:${this.port}/correlator/debug/breakpoint/errors`, { body });
+        } else {
+            return requestPromise.delete(`${this.host}:${this.port}/correlator/debug/breakpoint/errors`, { body });
+        }
     }
 }
