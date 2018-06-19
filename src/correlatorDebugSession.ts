@@ -12,19 +12,14 @@ import {
 	Variable
 } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { CorrelatorRuntime } from './correlatorRuntime';
-import { Uri } from 'vscode';
+import { CorrelatorCommandLineInterface, CorrelatorConfig } from './correlatorCommandLineInterface';
 import { CorrelatorHttpInterface, CorrelatorBreakpoint, CorrelatorPaused } from './correlatorHttpInterface';
 import { basename } from 'path';
 
 const MAX_STACK_SIZE = 1000;
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-	/** Path to Apama Home directory. */
-    apamaHome: string;
-    /** Argument list to provide to the correlator at startup */
-	correlatorArgs: string[];
-	/** List of files to inject ionto the correlator */
+	/** List of files to inject into the correlator */
 	injectionList: string[];
 }
 
@@ -38,14 +33,13 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
  * - ConfigurationDone
  */
 export class CorrelatorDebugSession extends DebugSession {
-	private _runtime: CorrelatorRuntime;
+	private correlatorCmd: CorrelatorCommandLineInterface;
 	private correlatorHttp: CorrelatorHttpInterface;
 
-	public constructor() {
+	public constructor(apamaHome: string, config: CorrelatorConfig) {
 		super();
-		this._runtime = new CorrelatorRuntime();
-		
-		this.correlatorHttp = new CorrelatorHttpInterface('http://localhost', 15903);
+		this.correlatorCmd = new CorrelatorCommandLineInterface(apamaHome, config);
+		this.correlatorHttp = new CorrelatorHttpInterface(config.host, config.port);
 	}
 
 	/**
@@ -78,7 +72,7 @@ export class CorrelatorDebugSession extends DebugSession {
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         console.log("Launch requested");
 
-		const correlatorProcess = this._runtime.start(args.apamaHome, args.correlatorArgs);
+		const correlatorProcess = this.correlatorCmd.start();
 
         correlatorProcess.stderr.setEncoding('utf8');
         correlatorProcess.stderr.on('data', (data: string) => this.sendEvent(new OutputEvent(data, 'stderr')));
@@ -89,7 +83,7 @@ export class CorrelatorDebugSession extends DebugSession {
 
 		this.correlatorHttp.enableDebugging()
 			.then(() => this.correlatorHttp.pause()) // Pause correlator while we wait for the configuration to finish, we want breakpoints to be set first
-			.then(() => this._runtime.injectFiles(args.apamaHome, args.injectionList))
+			.then(() => this.correlatorCmd.injectFiles(args.injectionList.map(filePath => this.convertClientPathToDebugger(filePath))))
 			.then(() => this.sendEvent(new InitializedEvent())) // We're ready to start recieving breakpoints
 			.then(() => this.sendResponse(response));
 	}
@@ -101,7 +95,7 @@ export class CorrelatorDebugSession extends DebugSession {
 		console.log('Breakpoints requested');
 		// TODO: It'll probably set the breakpoints twice in a file if a new breakpoint is added while running - so we should fix that
 		if (args.source.path) {
-			const filePath = normalizeCorrelatorFilePath(args.source.path);
+			const filePath = this.convertClientPathToDebugger(args.source.path);
 
 			// Attempt to set all of the breakpoints
 			const breakpointIds = (args.lines || [])
@@ -156,7 +150,7 @@ export class CorrelatorDebugSession extends DebugSession {
 	 */
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
 		console.log("Stop requested");
-		this._runtime.stop().then(() => this.sendResponse(response));
+		this.correlatorCmd.stop().then(() => this.sendResponse(response));
 	}
 
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
@@ -258,13 +252,21 @@ export class CorrelatorDebugSession extends DebugSession {
 			.then(() => this.sendResponse(response));
 	}
 
+    protected convertClientPathToDebugger(clientPath: string): string {
+		return normalizeCorrelatorFilePath(super.convertClientPathToDebugger(clientPath));
+	}
+
+    protected convertDebuggerPathToClient(debuggerPath: string): string {
+		return normalizeCorrelatorFilePath(super.convertDebuggerPathToClient(debuggerPath));
+	}
+
 	private waitForCorrelatorPause() {
 		this.correlatorHttp.awaitPause()
 			.then(paused => this.sendEvent(new StoppedEvent(paused.reason, paused.contextid)));
 	}
 
 	private createSource(filePath: string): Source {
-		return new Source(basename(filePath), normalizeCorrelatorFilePath(filePath));
+		return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath));
 	}
 
 	private createFrameId(contextId: number, frameidx: number): number {
@@ -283,8 +285,8 @@ export class CorrelatorDebugSession extends DebugSession {
 	private createVariablesRef(frameId: number, variableType: 'monitor' | 'local'): number {
 		let typeNumber = 0;
 		switch (variableType) {
-			case 'monitor': typeNumber = 0; break;
-			case 'local': typeNumber = 1; break;
+			case 'local': typeNumber = 0; break;
+			case 'monitor': typeNumber = 1; break;
 		}
 		return frameId * 10 + typeNumber;
 	}
@@ -325,5 +327,9 @@ export class CorrelatorDebugSession extends DebugSession {
 }
 
 export function normalizeCorrelatorFilePath(filePath: string): string {
-	return Uri.parse(filePath).fsPath;
+	if (process.platform === 'win32') {
+		return filePath.replace(/.+:/, match => match.toUpperCase());
+	} else {
+		return filePath;
+	}
 }

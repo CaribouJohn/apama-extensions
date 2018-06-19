@@ -1,7 +1,6 @@
 import * as requestPromise from 'request-promise-native';
 import { DOMParser } from 'xmldom';
 import * as xpath from 'xpath';
-import { ETIMEDOUT } from 'constants';
 
 export interface CorrelatorBreakpoint {
     filename: string;
@@ -53,7 +52,10 @@ export interface CorrelatorVariable {
 }
 
 export class CorrelatorHttpInterface {
-    constructor(private host: string, private port: number) {}
+    private url: string;
+    constructor(host: string, port: number) {
+        this.url = `http://${host}:${port}`;
+    }
 
     /** Sets a breakpoint and returns the id of the breakpoint. Throws an exception on error or failure. */
     public async setBreakpoint(filepath: string, line: number): Promise<string> {
@@ -63,13 +65,13 @@ export class CorrelatorHttpInterface {
             '<prop name="breakonce">true</prop>' +
         '</map>';
 
-        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/breakpoint/location`, { body })
+        return requestPromise.put(`${this.url}/correlator/debug/breakpoint/location`, { body })
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => xpath.select1('string(/map[@name="apama-response"]/list[@name="ids"]/prop[@name="id"]//text())', dom));
     }
 
     public async getAllSetBreakpoints(): Promise<CorrelatorBreakpoint[]> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/breakpoint`)
+        return requestPromise.get(`${this.url}/correlator/debug/breakpoint`)
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => xpath.select('/map[@name="apama-response"]/list[@name="breakpoints"]/map[@name="filebreakpoint"]', dom))
             // Have to convert the found breakpointNodes back to a string and then back to dom because this xpath implementation only finds from root node
@@ -89,39 +91,39 @@ export class CorrelatorHttpInterface {
 
     public async enableDebugging(): Promise<void> {
         const body = '<map name="apama-request"></map>';
-        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/state`, { body });
+        return requestPromise.put(`${this.url}/correlator/debug/state`, { body });
     }
 
     public async pause(): Promise<void> {
         const body = '<map name="apama-request"></map>';
-        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/stop`, { body });
+        return requestPromise.put(`${this.url}/correlator/debug/progress/stop`, { body });
     }
 
     public async resume(): Promise<void> {
         const body = '<map name="apama-request"></map>';
-        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/run`, { body });
+        return requestPromise.put(`${this.url}/correlator/debug/progress/run`, { body });
     }
 
     public async stepIn(): Promise<void> {
         const body = '<map name="apama-request"></map>';
-        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/step`, { body });
+        return requestPromise.put(`${this.url}/correlator/debug/progress/step`, { body });
     }
 
     public async stepOver(): Promise<void> {
         const body = '<map name="apama-request"></map>';
-        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/stepover`, { body });
+        return requestPromise.put(`${this.url}/correlator/debug/progress/stepover`, { body });
     }
 
     public async stepOut(): Promise<void> {
         const body = '<map name="apama-request"></map>';
-        return requestPromise.put(`${this.host}:${this.port}/correlator/debug/progress/stepout`, { body });
+        return requestPromise.put(`${this.url}/correlator/debug/progress/stepout`, { body });
     }
 
     public async awaitPause(): Promise<CorrelatorPaused> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress/wait`, { timeout: 15000 }) // Timeout has to be smaller than apama's timeout else you get a message in the logs
+        return requestPromise.get(`${this.url}/correlator/debug/progress/wait`, { timeout: 15000 }) // Timeout has to be smaller than apama's timeout else you get a message in the logs
             .catch(e => {
                 // If the await timed out (but not during connection) then just recreate it
-                if (e.code === ETIMEDOUT && !e.connect) {
+                if ((e.error.code === 'ETIMEDOUT' || e.error.code === 'ESOCKETTIMEDOUT') && !e.error.connect) {
                     return this.awaitPause();
                 } else {
                     throw e;
@@ -145,7 +147,7 @@ export class CorrelatorHttpInterface {
     }
 
     public async getContextStatuses(): Promise<(CorrelatorContextState | CorrelatorPaused)[]> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress`)
+        return requestPromise.get(`${this.url}/correlator/debug/progress`)
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => xpath.select('/map[@name="apama-response"]/list[@name="progress"]/map[@name="contextprogress"]', dom))
             // Have to convert back to a string and then back to dom because this xpath implementation only finds from root node
@@ -179,7 +181,7 @@ export class CorrelatorHttpInterface {
     }
 
     public async getStackTrace(contextid: number): Promise<CorrelatorStackTrace> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress/stack/id:${contextid}`)
+        return requestPromise.get(`${this.url}/correlator/debug/progress/stack/id:${contextid}`)
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => ({
                 contextid: parseInt(xpath.select1('string(/map[@name="apama-response"]/list[@name="stack"]/prop[@name="contextid"]//text())', dom)),
@@ -200,7 +202,7 @@ export class CorrelatorHttpInterface {
     }
 
     public async getLocalVariables(contextid: number, frameidx: number): Promise<CorrelatorVariable[]> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/debug/progress/locals/id:${contextid};${frameidx}`)
+        return requestPromise.get(`${this.url}/correlator/debug/progress/locals/id:${contextid};${frameidx}`)
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => xpath.select('/map[@name="apama-response"]/list[@name="locals"]/map[@name="variable"]', dom))
             // Have to convert the found nodes back to a string and then back to dom because this xpath implementation only finds from root node
@@ -215,7 +217,7 @@ export class CorrelatorHttpInterface {
     }
 
     public async getMonitorVariables(contextid: number, instance: number): Promise<CorrelatorVariable[]> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/contexts/id:${contextid}/${instance}`)
+        return requestPromise.get(`${this.url}/correlator/contexts/id:${contextid}/${instance}`)
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => xpath.select('/map[@name="apama-response"]/list[@name="mthread"]/map[@name="variable"]', dom))
             // Have to convert the found nodes back to a string and then back to dom because this xpath implementation only finds from root node
@@ -234,7 +236,7 @@ export class CorrelatorHttpInterface {
     }
 
     public async getMonitorVariableValue(contextid: number, instance: number, variableName: string): Promise<string> {
-        return requestPromise.get(`${this.host}:${this.port}/correlator/contexts/id:${contextid}/${instance}/${variableName}`)
+        return requestPromise.get(`${this.url}/correlator/contexts/id:${contextid}/${instance}/${variableName}`)
             .then(response => new DOMParser().parseFromString(response, 'text/xml'))
             .then(dom => xpath.select1('string(/map[@name="apama-response"]/prop[@name="value"]//text())', dom));
     }
@@ -242,9 +244,9 @@ export class CorrelatorHttpInterface {
     public async setBreakOnErrors(breakOnErrors: boolean): Promise<void> {
         const body = '<map name="apama-request"></map>';
         if (breakOnErrors) {
-            return requestPromise.put(`${this.host}:${this.port}/correlator/debug/breakpoint/errors`, { body });
+            return requestPromise.put(`${this.url}/correlator/debug/breakpoint/errors`, { body });
         } else {
-            return requestPromise.delete(`${this.host}:${this.port}/correlator/debug/breakpoint/errors`, { body });
+            return requestPromise.delete(`${this.url}/correlator/debug/breakpoint/errors`, { body });
         }
     }
 }

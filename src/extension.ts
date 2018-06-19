@@ -39,7 +39,11 @@ class ApamaConfigurationProvider implements vscode.DebugConfigurationProvider {
         return [ {
             type: "apama",
             name: "Debug Apama Application",
-            request: "launch"
+            request: "launch",
+            correlator: {
+                port: 15903,
+                args: ["-g"]
+            }
         }];
     }
 
@@ -74,17 +78,22 @@ class ApamaConfigurationProvider implements vscode.DebugConfigurationProvider {
             }
         }
 
-        if (!config.injectionList) {
-            config.injectionList = getInjectionList(config.apamaHome, folder.uri.fsPath);
-        }
+        config = Object.assign({
+            injectionList: getInjectionList(config.apamaHome, folder.uri.fsPath),
+            correlator: { /* Defaulted below */ }
+        }, config);
 
-        if (!config.correlatorArgs) {
-            config.correlatorArgs = [];
-        }
+        config.correlator = Object.assign({
+            host: "localhost",
+            port: 15903,
+            args: ["-g"]
+        }, config.correlator);
+
+        config.correlator.port = Math.floor(config.correlator.port);
 
         if (!this._server) {
             this._server = Net.createServer(socket => {
-                const session = new CorrelatorDebugSession();
+                const session = new CorrelatorDebugSession(config.apamaHome, config.correlator);
                 session.setRunAsServer(true);
                 session.start(<NodeJS.ReadableStream>socket, socket);
             }).listen(0);

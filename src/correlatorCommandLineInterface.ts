@@ -1,17 +1,22 @@
 import { spawn, ChildProcess, execFileSync } from 'child_process';
 import * as vscode from 'vscode';
 
-/**
- * A Mock runtime with minimal debugger functionality.
- */
-export class CorrelatorRuntime {
+export interface CorrelatorConfig {
+    host: string;
+    port: number;
+    args: string[];
+}
+
+export class CorrelatorCommandLineInterface {
     correlatorProcess?: ChildProcess;
     stdoutChannel?: vscode.OutputChannel;
+
+    constructor(private apamaHome: string, private config: CorrelatorConfig) {}
 
 	/**
 	 * Start the correlator
 	 */
-	public start(apamaHome: string, correlatorArgs: string[]): ChildProcess {
+	public start(): ChildProcess {
         if (this.correlatorProcess && !this.correlatorProcess.killed) {
             console.log("Correlator already started, stopping...");
             this.correlatorProcess.kill('SIGKILL');
@@ -22,7 +27,7 @@ export class CorrelatorRuntime {
         this.stdoutChannel = vscode.window.createOutputChannel('Apama Correlator');
         this.stdoutChannel.show();
 
-        this.correlatorProcess = spawn(apamaHome + '/bin/correlator', ["-g"].concat(correlatorArgs), {
+        this.correlatorProcess = spawn(this.apamaHome + '/bin/correlator', ["-p", this.config.port.toString()].concat(this.config.args), {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
@@ -42,8 +47,8 @@ export class CorrelatorRuntime {
     /**
      * Inject files into the correlator
      */
-    public injectFiles(apamaHome: string, files: string[]) {
-        execFileSync(apamaHome + '/bin/engine_inject', files);
+    public injectFiles(files: string[]) {
+        execFileSync(this.apamaHome + '/bin/engine_inject', files);
     }
 
     /**

@@ -67,17 +67,23 @@
         "label": "Apama",
         "configurationAttributes": {
           "launch": {
-            "required": [
-              "correlatorArgs"
-            ],
             "properties": {
-              "correlatorArgs": {
-                "type": "array",
-                "description": "List of arguments and values to provide to the correlator",
-                "default": [
-                  "-v",
-                  "INFO"
-                ]
+              "correlator": {
+                "type": "object",
+                "properties": {
+                  "port": {
+                    "type": "number",
+                    "description": "The port on which to run the correlator",
+                    "default": 15903
+                  },
+                  "args": {
+                    "type": "array",
+                    "description": "List of arguments and values to provide to the correlator",
+                    "default": [
+                      "-g"
+                    ]
+                  }
+                }
               }
             }
           }
