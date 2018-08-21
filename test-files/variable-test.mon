@@ -1,0 +1,29 @@
+/* test */
+
+/*
+test
+*/
+
+// test
+//
+any _a ;
+
+integer i;
+integer i2 ;
+integer _test;
+float f;
+boolean b;
+string s;
+dictionary<string, string> d;
+sequence<integer> q;
+
+
+any _a = f;
+integer i := 1;
+integer i2:= 1;
+integer _test := 3;
+float f := 1.0;
+boolean b := true;
+string s := "the rain in spain";
+dictionary<string, string> d = new dictionary<string,string>;
+sequence<integer> q := [];

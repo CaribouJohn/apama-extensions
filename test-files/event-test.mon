@@ -1,0 +1,69 @@
+//basic event 1
+event test1{}
+
+event test2 {}
+event test3 {
+}
+
+event test4 {
+    //test comment
+}
+
+event test5
+{}
+
+event test6
+{
+
+}
+
+event test7
+//extra comment
+{
+
+}
+
+//now test with included members
+event member1{
+    integer a;
+    string b;
+    boolean c;
+    float d;
+}
+
+event member2 {integer a;string b; boolean c;float d;}
+event member3 {
+    integer a;
+    string b;
+    boolean c;
+    float d;
+}
+
+event member4 {
+    //test comment
+    integer a;
+    string b;
+    boolean c;
+    float d;
+}
+
+event member5
+{integer a;string b; boolean c;float d;}
+
+event member6
+{
+    integer a;
+    string b;
+    boolean c;
+    float d;
+}
+
+event member7
+//extra comment
+{
+    integer a;
+    string b;
+    boolean c;
+    float d;
+}
+
