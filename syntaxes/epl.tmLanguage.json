@@ -1,6 +1,5 @@
 {
-  "$schema":
-    "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "epl",
   "patterns": [
     {
@@ -8,6 +7,9 @@
     },
     {
       "include": "#types"
+    },
+    {
+      "include": "#events"
     }
   ],
   "repository": {
@@ -15,7 +17,7 @@
       "patterns": [
         {
           "begin": "(?=\\b(i|f|b|st|a))",
-          "end":"(?=\\;)",
+          "end": "(?=\\;)",
           "patterns": [
             {
               "begin": "(integer|float|boolean|string|any)\\s+([_a-zA-Z][_a-zA-Z0-9]*)\\s*",
@@ -44,12 +46,11 @@
                 }
               ]
             }
-
           ]
         },
         {
           "begin": "(?=(\\bsequence|dictionary\\b))",
-          "end":"(?=\\;)",
+          "end": "(?=\\;)",
           "patterns": [
             {
               "begin": "(sequence|dictionary)\\s*\\<",
@@ -77,10 +78,37 @@
             {
               "include": "#control-keywords"
             }
-
           ]
         }
-
+      ]
+    },
+    "events": {
+      "begin": "(?=\\bev)",
+      "end": "\\}",
+      "patterns": [
+        {
+          "begin": "\\b(event)\\s+([_a-zA-Z][_a-zA-Z0-9]*)\\b",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.type.epl"
+            },
+            "2": {
+              "name": "token.variable.language.epl"
+            }
+          },
+          "end": "\\{",
+          "patterns": [
+            {
+              "include": "#comments"
+            }
+          ]
+        },
+        {
+          "include": "#types"
+        },
+        {
+          "include": "#comments"
+        }
       ]
     },
     "strings": {
@@ -109,21 +137,20 @@
         }
       ]
     },
-    "typenames":{
-      "patterns":[
+    "typenames": {
+      "patterns": [
         {
           "comment": "for parameters and templates",
           "match": "\\b(integer|string|boolean|float|any|dictionary|sequence)",
           "name": "keyword.operator"
         }
-      ]    
+      ]
     },
     "control-keywords": {
       "patterns": [
         {
           "comment": "Control keywords",
-          "match":
-            "(\\b(die|as|spawn|return|for|new|at|if|else|then|not|log|self|and|or|on|all|in|route|emit|enqueue|send)\\b)",
+          "match": "(\\b(die|as|spawn|return|for|new|at|if|else|then|not|log|self|and|or|on|all|in|route|emit|enqueue|send)\\b)",
           "name": "keyword.control.epl"
         }
       ]
@@ -146,23 +173,23 @@
         }
       ]
     },
-    "comma":{
-      "patterns":[
+    "comma": {
+      "patterns": [
         {
           "comment": "comma symbol",
           "match": "(\\,)",
           "name": "keyword.operator"
         }
-      ]    
+      ]
     },
-    "assignment":{
-      "patterns":[
+    "assignment": {
+      "patterns": [
         {
           "comment": ":= assignment symbol",
           "match": "(\\:\\=)",
           "name": "keyword.operator"
         }
-      ]    
+      ]
     }
   },
   "scopeName": "source.epl"

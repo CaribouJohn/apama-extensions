@@ -41,10 +41,16 @@ event member3 {
 
 event member4 {
     //test comment
-    integer a;
-    string b;
-    boolean c;
-    float d;
+    any _a = f;
+    integer i := 1;
+    integer i2:= 1;
+    integer _test := 3;
+    float f := 1.0;
+    boolean b := true;
+    string s := "the rain in spain";
+    dictionary<string, string> d := new dictionary<string,string>;
+    any _a = new dictionary<string,string>;
+    sequence<integer> q := [];
 }
 
 event member5
