@@ -6,17 +6,78 @@
       "include": "#comments"
     },
     {
-      "include": "#types"
+      "include": "#events"
     },
     {
-      "include": "#events"
+      "include": "#monitor"
+    },
+    {
+      "include": "#statement"
     }
   ],
   "repository": {
+    "events": {
+      "begin": "(?=\\bevent)",
+      "end": "\\}",
+      "patterns": [
+        {
+          "begin": "\\b(event)\\s+([_a-zA-Z][_a-zA-Z0-9]*)\\b",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.type.epl"
+            },
+            "2": {
+              "name": "entity.name.class.epl"
+            }
+          },
+          "end": "\\{",
+          "patterns": [
+            {
+              "include": "#comments"
+            }
+          ]
+        },
+        {
+          "include": "#types"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "monitor": {
+      "begin": "(?=\\bmonitor)",
+      "end": "\\}",
+      "patterns": [
+        {
+          "begin": "\\b(monitor)\\s+([_a-zA-Z][_a-zA-Z0-9]*)\\b",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.type.epl"
+            },
+            "2": {
+              "name": "entity.name.class.epl"
+            }
+          },
+          "end": "\\{",
+          "patterns": [
+            {
+              "include": "#comments"
+            }
+          ]
+        },
+        {
+          "include": "#types"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
     "types": {
       "patterns": [
         {
-          "begin": "(?=\\b(i|f|b|st|a))",
+          "begin": "(?=\\b(integer|float|boolean|string|any|dictionary|sequence))",
           "end": "(?=\\;)",
           "patterns": [
             {
@@ -45,69 +106,70 @@
                   "include": "#types"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "begin": "(?=(\\bsequence|dictionary\\b))",
-          "end": "(?=\\;)",
-          "patterns": [
+            },
             {
-              "begin": "(sequence|dictionary)\\s*\\<",
-              "beginCaptures": {
-                "1": {
-                  "name": "entity.name.type.epl"
-                }
-              },
-              "end": "(?=\\>)",
+              "begin": "(?=(\\bsequence|dictionary\\b))",
+              "end": "(?=\\;)",
               "patterns": [
                 {
-                  "include": "#typenames"
+                  "begin": "(sequence|dictionary)\\s*\\<",
+                  "beginCaptures": {
+                    "1": {
+                      "name": "entity.name.type.epl"
+                    }
+                  },
+                  "end": "(?=\\>)",
+                  "patterns": [
+                    {
+                      "include": "#typenames"
+                    },
+                    {
+                      "include": "#comma"
+                    }
+                  ]
                 },
                 {
-                  "include": "#comma"
+                  "include": "#identifier"
+                },
+                {
+                  "include": "#assignment"
+                },
+                {
+                  "include": "#control-keywords"
+                },
+                {
+                  "include": "#arrays"
                 }
               ]
-            },
-            {
-              "include": "#assignment"
-            },
-            {
-              "include": "#control-keywords"
-            },
-            {
-              "include": "#arrays"
             }
           ]
         }
       ]
     },
-    "events": {
-      "begin": "(?=\\bev)",
-      "end": "\\}",
-      "patterns": [
+    "method-member-access": {
+      "begin": "([_a-zA-Z][_a-zA-Z0-9]*)(\\.)([_a-zA-Z][_a-zA-Z0-9]*)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.class.epl"
+        },
+        "2": {
+          "name": "keyword.operator"
+        },
+        "3": {
+          "name": "entity.name.function.epl"
+        }
+      },
+      "end": "(\\;)"
+    },
+    "statement": {
+      "begin": "(?=[_a-zA-Z][_a-zA-Z0-9]*)\\s*",
+      "end": "(?=\\;)",
+      "patterns":[
         {
-          "begin": "\\b(event)\\s+([_a-zA-Z][_a-zA-Z0-9]*)\\b",
-          "beginCaptures": {
-            "1": {
-              "name": "entity.name.type.epl"
-            },
-            "2": {
-              "name": "variable.language.epl"
-            }
-          },
-          "end": "\\{",
-          "patterns": [
-            {
-              "include": "#comments"
-            }
-          ]
+          "include":"#method-member-access"
         },
         {
           "include": "#types"
-        },
-        {
-          "include": "#comments"
         }
       ]
     },
@@ -130,9 +192,7 @@
           "include": "#comma"
         },
         {
-          "comment": "IDENTIFIER",
-          "match": "\\b([_a-zA-Z][_a-zA-Z0-9]*)\\b",
-          "name": "variable.language.epl"
+          "include": "#identifier"
         }
       ]
     },
@@ -196,6 +256,15 @@
         }
       ]
     },
+    "operators": {
+      "patterns": [
+        {
+          "comment": "operator symbol",
+          "match": "(\\<|\\>|\\=|\\||\\!)",
+          "name": "keyword.operator"
+        }
+      ]
+    },
     "assignment": {
       "patterns": [
         {
@@ -204,6 +273,11 @@
           "name": "keyword.operator"
         }
       ]
+    },
+    "identifier": {
+      "comment": "IDENTIFIER - LAST match",
+      "match": "\\b([_a-zA-Z][_a-zA-Z0-9]*)\\b",
+      "name": "variable.language.epl"
     }
   },
   "scopeName": "source.epl"
