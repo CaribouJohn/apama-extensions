@@ -7,194 +7,80 @@
       "include": "#comments"
     },
     {
-      "include": "#event"
-    },
-    {
-      "include": "#action"
-    },
-    {
-      "include": "#monitor"
-    },
-    {
-      "include": "#keywords"
-    },
-    {
-      "include": "#strings"
-    },
-    {
-      "include": "#collections"
-    },
-    {
-      "include": "#definitions"
-    },
-    {
       "include": "#types"
-    },
-    {
-      "include": "#controlkw"
-    },
-    {
-      "include": "#logging"
-    },
-    {
-      "include": "#constants"
     }
   ],
   "repository": {
-    "event": {
-      "patterns": [
-        {
-          "match":
-            "\\b(event)\\s+([_A-Za-z][_A-Za-z0-9]*\\b)+\\s*{",
-          "captures": {
-            "1": {
-              "name": "entity.name.type.epl"
-            },
-            "2": {
-              "oldname": "token.variable.language.epl",
-              "name": "comment.line.epl"
-            }
-          }
-        }
-      ]
-    },
-    "action": {
-      "patterns": [
-				{
-					"comment": "action => method like thing",
-					"begin": "\\b(action)\\b\\s*([_A-Za-z][_A-Za-z0-9]*\\b)?+",
-					"beginCaptures": {
-						"0": {
-							"name": "keyword.other.epl"
-						},
-						"1": {
-							"name": "entity.name.type.epl"
-						}
-					},
-					"end": "(?<=\\})|(?=(;|\\(|\\)|>|\\[|\\]|=))",
-					"name": "meta.class-struct-block.epl",
-					"patterns": [
-						{
-							"begin": "\\{",
-							"beginCaptures": {
-								"0": {
-									"name": "punctuation.section.block.begin.bracket.curly.epl"
-								}
-							},
-							"end": "(\\})(\\s*\\n)?",
-							"endCaptures": {
-								"1": {
-									"name": "punctuation.section.block.end.bracket.curly.epl"
-								},
-								"2": {
-									"name": "invalid.illegal.you-forgot-semicolon.epl"
-								}
-							},
-							"patterns": [
-								{
-									"include": "$base"
-								}
-							]
-						},
-						{
-							"include": "$base"
-						}
-					]
-				}
-			]    },
-    "monitor": {
-      "patterns": [
-        {
-          "match":
-            "\\b(monitor)\\b\\s*([_A-Za-z][_A-Za-z0-9]*\\b)?+\\s*\\{",
-          "captures": {
-            "1": {
-              "name": "entity.name.type.epl"
-            },
-            "2": {
-              "name": "token.variable.language.epl"
-            }
-          }
-        }
-      ]
-    },
-    "controlkw": {
-      "patterns": [
-        {
-          "comment": "Control keywords",
-          "match":
-            "(\\b(die|as|spawn|return|for|new|at|if|else|then|not|log|self|and|or|on|all|in|route|emit|enqueue|send)\\b)",
-          "name": "keyword.control.epl"
-        }
-      ]
-    },
-    "constants": {
-      "patterns": [
-        {
-          "comment": "Constants in EPL",
-          "match": "\\b(true|false|constant)\\b",
-          "name": "constant.language.epl"
-        }
-      ]
-    },
-    "logging": {
-      "patterns": [
-        {
-          "comment": "Logging and numeric constants",
-          "match": "\\b(\\d+|DEBUG|WARN|INFO|ERROR|CRIT)\\b",
-          "name": "constant.language.epl"
-        }
-      ]
-    },
     "types": {
       "patterns": [
         {
-          "match":
-            "\\b(string|integer|float|boolean)\\b\\s*([_A-Za-z][_A-Za-z0-9]*\\b)?+",
-          "captures": {
-            "1": {
-              "name": "storage.type.epl"
-            },
-            "2": {
-              "name": "token.variable.language.epl"
+          "begin": "(?=\\b(i|f|b|st|a))",
+          "end":"(?=\\;)",
+          "patterns": [
+            {
+              "begin": "(integer|float|boolean|string|any)\\s+([_a-zA-Z][_a-zA-Z0-9]*)\\s*",
+              "beginCaptures": {
+                "1": {
+                  "name": "entity.name.type.epl"
+                },
+                "2": {
+                  "name": "token.variable.language.epl"
+                }
+              },
+              "end": "(?=\\;)",
+              "patterns": [
+                {
+                  "include": "#assignment"
+                },
+                {
+                  "include": "#strings"
+                },
+                {
+                  "include": "#control-keywords"
+                },
+                {
+                  "comment": "This allows the any to be assigned to",
+                  "include": "#types"
+                }
+              ]
             }
-          }
-        }
-      ]
-    },
-    "collections": {
-      "patterns": [
+
+          ]
+        },
         {
-          "match":
-            "\\b(sequence|dictionary)\\b\\s*\\<([_A-Za-z][_A-Za-z0-9]*)\\b\\>\\s*([_A-Za-z][_A-Za-z0-9]*\\b)?+",
-          "captures": {
-            "1": {
-              "name": "entity.name.type.epl"
+          "begin": "(?=(\\bsequence|dictionary\\b))",
+          "end":"(?=\\;)",
+          "patterns": [
+            {
+              "begin": "(sequence|dictionary)\\s*\\<",
+              "beginCaptures": {
+                "1": {
+                  "name": "entity.name.type.epl"
+                },
+                "2": {
+                  "name": "token.variable.language.epl"
+                }
+              },
+              "end": "(?=\\>)",
+              "patterns": [
+                {
+                  "include": "#typenames"
+                },
+                {
+                  "include": "#comma"
+                }
+              ]
             },
-            "2": {
-              "name": "storage.type.epl"
+            {
+              "include": "#assignment"
             },
-            "3": {
-              "name": "token.variable.language.epl"
+            {
+              "include": "#control-keywords"
             }
-          }
+
+          ]
         }
-      ]
-    },
-    "definitions": {
-      "patterns": [
-        {
-          "name": "keyword.other.epl",
-          "match": "\\b(returns|using)\\b"
-        }
-      ]
-    },
-    "keywords": {
-      "patterns": [
-        {
-          "name": "keyword.control.epl",
-          "match": "\\b(if|while|for|return)\\b"
-        }
+
       ]
     },
     "strings": {
@@ -222,6 +108,61 @@
           "name": "comment.line.epl"
         }
       ]
+    },
+    "typenames":{
+      "patterns":[
+        {
+          "comment": "for parameters and templates",
+          "match": "\\b(integer|string|boolean|float|any|dictionary|sequence)",
+          "name": "keyword.operator"
+        }
+      ]    
+    },
+    "control-keywords": {
+      "patterns": [
+        {
+          "comment": "Control keywords",
+          "match":
+            "(\\b(die|as|spawn|return|for|new|at|if|else|then|not|log|self|and|or|on|all|in|route|emit|enqueue|send)\\b)",
+          "name": "keyword.control.epl"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "comment": "Constants in EPL",
+          "match": "\\b(true|false|constant)\\b",
+          "name": "constant.language.epl"
+        }
+      ]
+    },
+    "logging": {
+      "patterns": [
+        {
+          "comment": "Logging and numeric constants",
+          "match": "\\b(\\d+|DEBUG|WARN|INFO|ERROR|CRIT)\\b",
+          "name": "constant.language.epl"
+        }
+      ]
+    },
+    "comma":{
+      "patterns":[
+        {
+          "comment": "comma symbol",
+          "match": "(\\,)",
+          "name": "keyword.operator"
+        }
+      ]    
+    },
+    "assignment":{
+      "patterns":[
+        {
+          "comment": ":= assignment symbol",
+          "match": "(\\:\\=)",
+          "name": "keyword.operator"
+        }
+      ]    
     }
   },
   "scopeName": "source.epl"

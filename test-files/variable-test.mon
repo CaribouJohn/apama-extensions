@@ -25,5 +25,6 @@ integer _test := 3;
 float f := 1.0;
 boolean b := true;
 string s := "the rain in spain";
-dictionary<string, string> d = new dictionary<string,string>;
+dictionary<string, string> d := new dictionary<string,string>;
+any _a = new dictionary<string,string>;
 sequence<integer> q := [];
