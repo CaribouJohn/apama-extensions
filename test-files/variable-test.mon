@@ -18,7 +18,7 @@ dictionary<string, string> d;
 sequence<integer> q;
 
 
-any _a = f;
+any _a := f;
 integer i := 1;
 integer i2:= 1;
 integer _test := 3;
@@ -27,4 +27,4 @@ boolean b := true;
 string s := "the rain in spain";
 dictionary<string, string> d := new dictionary<string,string>;
 any _a = new dictionary<string,string>;
-sequence<integer> q := [];
+sequence<integer> q := [1,_b,test_identifier];

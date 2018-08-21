@@ -50,7 +50,7 @@ event member4 {
     string s := "the rain in spain";
     dictionary<string, string> d := new dictionary<string,string>;
     any _a = new dictionary<string,string>;
-    sequence<integer> q := [];
+    sequence<integer> q := [1,_b,test_identifier];
 }
 
 event member5
