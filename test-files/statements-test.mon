@@ -1,14 +1,17 @@
 
-a < b;
-a > b;
-a = b;
-a := b;
-fields := me.getFieldNames();
-plugin.sendEventChannelDict("channame", "MyEvent", d);
-log "less than 1k iterations" at INFO;
 
-a.b.c.test()
+monitor x{
+    a < b;
+    a > b;
+    a = b;
+    a := b;
+    fields := me.getFieldNames();
+    plugin.sendEventChannelDict("channame", "MyEvent", d);
+    log "less than 1k iterations" at INFO;
 
-//Send the next batch 
-DoBatch nextBatch := DoBatch(nextIterations);
-send nextBatch to context.current();
+    a.b.c.test()
+
+    //Send the next batch 
+    DoBatch nextBatch := DoBatch(nextIterations);
+    send nextBatch to context.current();
+}

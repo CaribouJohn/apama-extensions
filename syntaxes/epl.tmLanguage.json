@@ -45,6 +45,63 @@
         }
       ]
     },
+    "action": {
+      "begin": "(?=\\baction)",
+      "end": "\\}",
+      "patterns": [
+        {
+          "begin": "\\b(action)\\s+([_a-zA-Z][_a-zA-Z0-9]*)\\b",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.type.epl"
+            },
+            "2": {
+              "name": "entity.name.function.epl"
+            }
+          },
+          "end": "\\)",
+          "patterns": [
+            {
+              "include": "#types"
+            },
+            {
+              "include": "#comma"
+            },
+            {
+              "include": "#arrays"
+            },
+            {
+              "include": "#strings"
+            }
+          ]
+        },
+        {
+          "begin": "\\{",
+          "end": "\\}",
+          "patterns": [
+            
+            {
+              "include": "#control-keywords"
+            },
+            {
+              "include": "#arrays"
+            },
+            {
+              "include": "#assignment"
+            },
+            {
+              "include": "#types"
+            },
+            {
+              "include": "#strings"
+            },
+            {
+              "include": "#comments"
+            }
+          ]
+        }      
+      ]
+    },
     "monitor": {
       "begin": "(?=\\bmonitor)",
       "end": "\\}",
@@ -67,10 +124,10 @@
           ]
         },
         {
-          "include": "#types"
+          "include": "#action"
         },
         {
-          "include": "#comments"
+          "include":"#codeblock"
         }
       ]
     },
@@ -147,7 +204,7 @@
       ]
     },
     "method-member-access": {
-      "begin": "(([_a-zA-Z][_a-zA-Z0-9]*\\.)+([_a-zA-Z][_a-zA-Z0-9]*))",
+      "match": "(([_a-zA-Z][_a-zA-Z0-9]*\\.)+([_a-zA-Z][_a-zA-Z0-9]*))",
       "beginCaptures": {
         "1": {
           "name": "entity.name.class.epl"
@@ -158,8 +215,19 @@
         "3": {
           "name": "entity.name.function.epl"
         }
-      },
-      "end": "(\\;)"
+      }
+    },
+    "codeblock": {
+      "begin": "\\{",
+      "end": "(?=\\})",
+      "patterns":[
+        {
+          "include":"#method-member-access"
+        },
+        {
+          "include": "#types"
+        }
+      ]
     },
     "statement": {
       "begin": "(?=[_a-zA-Z][_a-zA-Z0-9]*)\\s*",
@@ -224,7 +292,7 @@
       "patterns": [
         {
           "comment": "Control keywords",
-          "match": "(\\b(die|as|spawn|return|for|new|at|if|else|then|not|log|self|and|or|on|all|in|route|emit|enqueue|send)\\b)",
+          "match": "(\\b(import|on|die|as|spawn|return|for|new|at|if|else|then|not|log|self|and|or|on|all|in|route|emit|enqueue|send)\\b)",
           "name": "keyword.control.epl"
         }
       ]
