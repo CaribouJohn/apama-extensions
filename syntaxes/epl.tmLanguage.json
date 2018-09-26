@@ -147,13 +147,13 @@
       ]
     },
     "method-member-access": {
-      "begin": "([_a-zA-Z][_a-zA-Z0-9]*)(\\.)([_a-zA-Z][_a-zA-Z0-9]*)",
+      "begin": "(([_a-zA-Z][_a-zA-Z0-9]*\\.)+([_a-zA-Z][_a-zA-Z0-9]*))",
       "beginCaptures": {
         "1": {
           "name": "entity.name.class.epl"
         },
         "2": {
-          "name": "keyword.operator"
+          "name": "entity.name.function.epl"
         },
         "3": {
           "name": "entity.name.function.epl"
