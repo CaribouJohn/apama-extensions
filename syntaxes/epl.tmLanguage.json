@@ -112,7 +112,7 @@
 			]
 		},
 		{
-			"match": "(?x)\n\\b(export)\\b\\s*\n\\b(default)\\b\\s*\n\\b((?!\\b(?:function|class|let|var|const)\\b)[a-zA-Z_$][\\w$]*)?\\b",
+			"match": "(?x)\n\\b(export)\\b\\s*\n\\b(default)\\b\\s*\n\\b((?!\\b(?:action|monitor|function|class|any|sequence|dictionary|integer|float|string|boolean|const)\\b)[a-zA-Z_$][\\w$]*)?\\b",
 			"captures": {
 				"0": {
 					"name": "meta.export.js"
@@ -448,7 +448,7 @@
 			]
 		},
 		{
-			"begin": "(?x)\n(?=\n  (?!\n    (break|case|catch|continue|do|else|finally|for|function|if|\n    package|return|switch|throw|try|while|with)\n    [\\s\\(]\n  )\n  (\n    \\b(get|set)            # Property getter/setter: get foo(){}\n    (?:\\s+|(?=\\[))        # Followed by whitespace or square bracket\n  )?+\n  (                         # Method name\n    \\b[a-zA-Z_$][\\w$]*    # Fixed name\n    |\n    \\[                     # Computed property key\n      [^\\[\\]]++           # Contains at least one non-brace character\n    \\]\n  )\n  \\s*\\(\\s*               # Start of arguments list\n    (\n      \"[^\"]*\"  |            # Double-quoted string\n      '[^']*'  |            # Single-quoted string\n       [^\"()']              # Any non-bracket or non-quote\n    )*\n  \\)\\s*                   # End of arguments\n  {                         # Beginning of body\n)",
+			"begin": "(?x)\n(?=\n  (?!\n    (break|case|catch|continue|do|else|finally|for|at|on|all|as|route|log|function|if|\n    package|return|switch|throw|try|while|with)\n    [\\s\\(]\n  )\n  (\n    \\b(get|set)            # Property getter/setter: get foo(){}\n    (?:\\s+|(?=\\[))        # Followed by whitespace or square bracket\n  )?+\n  (                         # Method name\n    \\b[a-zA-Z_$][\\w$]*    # Fixed name\n    |\n    \\[                     # Computed property key\n      [^\\[\\]]++           # Contains at least one non-brace character\n    \\]\n  )\n  \\s*\\(\\s*               # Start of arguments list\n    (\n      \"[^\"]*\"  |            # Double-quoted string\n      '[^']*'  |            # Single-quoted string\n       [^\"()']              # Any non-bracket or non-quote\n    )*\n  \\)\\s*                   # End of arguments\n  {                         # Beginning of body\n)",
 			"end": "(?<=})",
 			"patterns": [
 				{
@@ -657,7 +657,7 @@
 			}
 		},
 		{
-			"match": "(?x)\n\\b(class)\n(?:\n  (?:\\s+(extends)\\s+([a-zA-Z_$][\\w$]*))\n  |\n  (?:\n    (?:\\s+([a-zA-Z_$][\\w$]*))\n    (?:\\s+(extends)\\s+([a-zA-Z_$][\\w$]*))?\n  )\n)",
+			"match": "(?x)\n\\b(action|monitor|event|class)\n(?:\n  (?:\\s+(extends)\\s+([a-zA-Z_$][\\w$]*))\n  |\n  (?:\n    (?:\\s+([a-zA-Z_$][\\w$]*))\n    (?:\\s+(extends)\\s+([a-zA-Z_$][\\w$]*))?\n  )\n)",
 			"captures": {
 				"1": {
 					"name": "storage.type.class.js"
@@ -792,7 +792,7 @@
 			"name": "comment.block.html.js"
 		},
 		{
-			"match": "(?<!\\.)\\b(class|enum|function|interface)(?!\\s*:)\\b",
+			"match": "(?<!\\.)\\b(action|monitor|event|class|enum|function|interface)(?!\\s*:)\\b",
 			"name": "storage.type.js"
 		},
 		{
@@ -800,7 +800,7 @@
 			"name": "storage.modifier.js"
 		},
 		{
-			"match": "(?<!\\.)\\b(let|var)(?!\\s*:)\\b",
+			"match": "(?<!\\.)\\b(any|sequence|dictionary|integer|float|string|boolean)(?!\\s*:)\\b",
 			"name": "storage.type.var.js"
 		},
 		{
@@ -880,7 +880,7 @@
 			"name": "meta.control.yield.js"
 		},
 		{
-			"match": "(?<!\\.)\\b(await|break|catch|continue|do|else|finally|for|if|import|package|return|throw|try|while|with)(?!\\s*:)\\b",
+			"match": "(?<!\\.)\\b(await|break|catch|continue|do|else|finally|for|at|on|all|as|route|log|if|import|package|return|throw|try|while|with)(?!\\s*:)\\b",
 			"name": "keyword.control.js"
 		},
 		{
