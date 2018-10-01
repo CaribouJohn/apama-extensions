@@ -2,7 +2,7 @@
   "name": "apama-extensions",
   "displayName": "Apama Extensions",
   "description": "EPL language support for Apama",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "CaribouJohn",
   "repository": {
     "url": "https://github.com/CaribouJohn/vscode-apama-extensions"

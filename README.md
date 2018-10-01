@@ -8,7 +8,9 @@ For mor information on EPL and Apama please visit the [Apama Community Edition w
 
 ## Features
 
-supporting EPL language from Apama 10.3 +
+WIP: supporting EPL language from Apama 10.3 +
+WIP: Initial support for debugging and launching pure EPL in a correlator. 
+
 
 ## Requirements
 
@@ -26,14 +28,9 @@ TBA
 
 Users are welcome to make pull requests with fixes and enhancements but I reserve the right to control what and when goes into released versions of the extention.
 
-Highlighting tokens can be based on the following:
-<https://github.com/Microsoft/vscode/blob/1.8.0/src/vs/editor/browser/standalone/media/standalone-tokens.css>
-
-so where we use **token.constant.language.epl** it will match with **token.constant.language** when defined in the loaded theme.
-
-And Additionally rules taken from here :
-<https://github.com/Microsoft/vscode/blob/master/extensions/java/syntaxes/java.tmLanguage.json>
+The syntax highlighting is being adapted from a Javascript syntax file and is being cleaned up and enhanced iteratively. I will eventually have a complete JSON based syntax file for EPL at which point I will probably publish it separately for others to use in the various editors that use the Texmate format. (N.B vscode does have some quirks which will need translating)
 
 ## Release Notes
 
+v0.7 - Better syntax highlighting, Snippets, Apama EPL debugging 
 v0.1 - initial release, basic highlighting support and placeholder for command(s)
