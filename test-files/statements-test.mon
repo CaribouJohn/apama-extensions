@@ -14,4 +14,14 @@ monitor x{
     //Send the next batch 
     DoBatch nextBatch := DoBatch(nextIterations);
     send nextBatch to context.current();
+
+
+    /**
+     * Description of actionName
+     * @param paramName Description of this param
+     * @returns Description of the return value
+     */
+    action actionName(string param) returns string {
+        throw com.apama.exceptions.Exception("Not yet implemented", "NotImplemented");
+    }
 }
