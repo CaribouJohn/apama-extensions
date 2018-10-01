@@ -28,160 +28,9 @@
 					},
 					"patterns": [
 						{
-							"match": "(?x)\n(?: \\b(default)\\b | \\b([a-zA-Z_$][\\w$]*)\\b)\n\\s*\n(\\b as \\b)\n\\s*\n(?: (\\b default \\b | \\*) | \\b([a-zA-Z_$][\\w$]*)\\b)",
-							"captures": {
-								"1": {
-									"name": "variable.language.default.epl"
-								},
-								"2": {
-									"name": "variable.other.module.epl"
-								},
-								"3": {
-									"name": "keyword.control.epl"
-								},
-								"4": {
-									"name": "invalid.illegal.epl"
-								},
-								"5": {
-									"name": "variable.other.module-alias.epl"
-								}
-							}
-						},
-						{
-							"match": ",",
-							"name": "meta.delimiter.object.comma.epl"
-						},
-						{
-							"include": "#comments"
-						},
-						{
-							"match": "\\b([a-zA-Z_$][\\w$]*)\\b",
-							"name": "variable.other.module.epl"
-						}
-					]
-				},
-				{
-					"match": "(?x)\n(?: \\b(default)\\b | (\\*) | \\b([a-zA-Z_$][\\w$]*)\\b)\n\\s*\n(\\b as \\b)\n\\s*\n(?: (\\b default \\b | \\*) | \\b([a-zA-Z_$][\\w$]*)\\b)",
-					"captures": {
-						"1": {
-							"name": "variable.language.default.epl"
-						},
-						"2": {
-							"name": "variable.language.import-all.epl"
-						},
-						"3": {
-							"name": "variable.other.module.epl"
-						},
-						"4": {
+							"match": "as",
 							"name": "keyword.control.epl"
 						},
-						"5": {
-							"name": "invalid.illegal.epl"
-						},
-						"6": {
-							"name": "variable.other.module-alias.epl"
-						}
-					}
-				},
-				{
-					"match": "\\*",
-					"name": "variable.language.import-all.epl"
-				},
-				{
-					"match": "\\b(default)\\b",
-					"name": "variable.language.default.epl"
-				},
-				{
-					"include": "#strings"
-				},
-				{
-					"include": "#comments"
-				},
-				{
-					"match": "\\b(from)\\b",
-					"name": "keyword.control.epl"
-				},
-				{
-					"match": "\\b([a-zA-Z_$][\\w$]*)\\b(?=.*\\bfrom\\b)",
-					"name": "variable.other.module.epl"
-				},
-				{
-					"match": ",",
-					"name": "meta.delimiter.object.comma.epl"
-				}
-			]
-		},
-		{
-			"match": "(?x)\n\\b(export)\\b\\s*\n\\b(default)\\b\\s*\n\\b((?!\\b(?:action|monitor|function|class|any|sequence|dictionary|integer|float|string|boolean|const)\\b)[a-zA-Z_$][\\w$]*)?\\b",
-			"captures": {
-				"0": {
-					"name": "meta.export.epl"
-				},
-				"1": {
-					"name": "keyword.control.epl"
-				},
-				"2": {
-					"name": "variable.language.default.epl"
-				},
-				"3": {
-					"name": "variable.other.module.epl"
-				}
-			}
-		},
-		{
-			"begin": "(?<!\\.)\\b(export)(?!\\s*[:(])\\b",
-			"beginCaptures": {
-				"1": {
-					"name": "keyword.control.epl"
-				}
-			},
-			"end": "(?=;|\\bfunction\\b|\\bclass\\b|\\blet\\b|\\bvar\\b|\\bconst\\b|$)",
-			"name": "meta.export.epl",
-			"patterns": [
-				{
-					"include": "#numbers"
-				},
-				{
-					"begin": "{(?=.*\\bfrom\\b)",
-					"beginCaptures": {
-						"0": {
-							"name": "punctuation.definition.modules.begin.epl"
-						}
-					},
-					"end": "}",
-					"endCaptures": {
-						"0": {
-							"name": "punctuation.definition.modules.end.epl"
-						}
-					},
-					"patterns": [
-						{
-							"match": "(?x)\n(?: \\b(default)\\b | \\b([a-zA-Z_$][\\w$]*)\\b)\n\\s*\n(\\b as \\b)\n\\s*\n(?: \\b(default)\\b | (\\*) | \\b([a-zA-Z_$][\\w$]*)\\b)",
-							"captures": {
-								"1": {
-									"name": "variable.language.default.epl"
-								},
-								"2": {
-									"name": "variable.other.module.epl"
-								},
-								"3": {
-									"name": "keyword.control.epl"
-								},
-								"4": {
-									"name": "variable.language.default.epl"
-								},
-								"5": {
-									"name": "invalid.illegal.epl"
-								},
-								"6": {
-									"name": "variable.other.module-alias.epl"
-								}
-							}
-						},
-						{
-							"match": ",",
-							"name": "meta.delimiter.object.comma.epl"
-						},
 						{
 							"include": "#comments"
 						},
@@ -192,83 +41,18 @@
 					]
 				},
 				{
-					"begin": "(?![a-zA-Z_$0-9]){",
-					"beginCaptures": {
-						"0": {
-							"name": "punctuation.definition.modules.begin.epl"
-						}
-					},
-					"end": "}",
-					"endCaptures": {
-						"0": {
-							"name": "punctuation.definition.modules.end.epl"
-						}
-					},
-					"patterns": [
-						{
-							"captures": {
-								"1": {
-									"name": "invalid.illegal.epl"
-								},
-								"2": {
-									"name": "variable.other.module.epl"
-								},
-								"3": {
-									"name": "keyword.control.epl"
-								},
-								"4": {
-									"name": "variable.language.default.epl"
-								},
-								"5": {
-									"name": "invalid.illegal.epl"
-								},
-								"6": {
-									"name": "variable.other.module-alias.epl"
-								}
-							},
-							"match": "(?x)\n(?: \\b(default)\\b | \\b([a-zA-Z_$][\\w$]*)\\b)\n\\s*\n(\\b as \\b)\n\\s*\n(?: \\b(default)\\b | (\\*) | \\b([a-zA-Z_$][\\w$]*)\\b)"
-						},
-						{
-							"include": "#comments"
-						},
-						{
-							"match": ",",
-							"name": "meta.delimiter.object.comma.epl"
-						},
-						{
-							"match": "\\b([a-zA-Z_$][\\w$]*)\\b",
-							"name": "variable.other.module.epl"
-						}
-					]
-				},
-				{
-					"match": "\\*(?=.*\\bfrom\\b)",
-					"name": "variable.language.import-all.epl"
-				},
-				{
-					"match": "\\b(default)\\b",
-					"name": "variable.language.default.epl"
-				},
-				{
 					"include": "#strings"
 				},
 				{
 					"include": "#comments"
 				},
 				{
-					"match": "\\b(from)\\b",
+					"match": "\\b(as)\\b",
 					"name": "keyword.control.epl"
 				},
 				{
-					"match": "\\b([a-zA-Z_$][\\w$]*)\\b",
+					"match": "\\b([a-zA-Z_$][\\w$]*)\\b(?=.*\\bas\\b)",
 					"name": "variable.other.module.epl"
-				},
-				{
-					"match": ",",
-					"name": "meta.delimiter.object.comma.epl"
-				},
-				{
-					"include": "#operators"
 				}
 			]
 		},
