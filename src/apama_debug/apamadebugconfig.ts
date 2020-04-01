@@ -18,12 +18,13 @@ export class ApamaDebugConfigurationProvider implements DebugConfigurationProvid
      */
     provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
         this.logger.appendLine("provideDebugConfigurations");
+        let config = workspace.getConfiguration("softwareag.apama");
         return [ {
             type: "apama",
             name: "Debug Apama Application",
             request: "launch",
             correlator: {
-                port: 15903,
+                port: config.get("debugport"),
                 args: ["-g"]
             }
         }];
@@ -54,7 +55,7 @@ export class ApamaDebugConfigurationProvider implements DebugConfigurationProvid
 
         config.correlator = Object.assign({
             host: "localhost",
-            port: 15903,
+            port: workspace.getConfiguration("softwareag.apama").get("debugport"),
             args: ["-g"]
         }, config.correlator);
 

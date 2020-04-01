@@ -14,6 +14,7 @@ import { ApamaEnvironment } from './apama_util/apamaenvironment';
 import { ApamaTaskProvider } from './apama_util/apamataskprovider';
 import { ApamaDebugConfigurationProvider } from './apama_debug/apamadebugconfig';
 import { ApamaProjectView } from './apama_project/apamaProjectView';
+import { ApamaCommandProvider } from './apama_util/commands';//MY CHANGES
 
 //
 // client activation function, this is the entrypoint for the client
@@ -29,8 +30,12 @@ export function activate(context: vscode.ExtensionContext): void {
 	context.subscriptions.push(vscode.tasks.registerTaskProvider( "apama" , taskprov ));
 
 	const provider = new ApamaDebugConfigurationProvider(logger,apamaEnv);
-	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('apama', provider));
-	context.subscriptions.push(provider);
+
+	context.subscriptions.push(debug.registerDebugConfigurationProvider('apama', provider));
+
+  context.subscriptions.push(provider);
+
+	const commandprov = new ApamaCommandProvider(logger, apamaEnv, context);
 
 	//this needs a workspace folder which under some circumstances can be undefined. 
 	//but we can ignore in that case and things shjould still work
