@@ -33,6 +33,26 @@
           "type": "integer",
           "default": "15903",
           "description": "Default port for correlator debugging."
+        },
+        "softwareag.c8y.url": {
+          "type": "string",
+          "default": "https://demos.cumulocity.com/",
+          "description": "Url of the cumulocity instance."
+        },
+        "softwareag.c8y.tenant": {
+          "type": "string",
+          "default": "demos",
+          "description": "Url of the cumulocity instance."
+        },
+        "softwareag.c8y.user": {
+          "type": "string",
+          "default": "user",
+          "description": "Url of the cumulocity instance."
+        },
+        "softwareag.c8y.password": {
+          "type": "string",
+          "default": "pw",
+          "description": "Url of the cumulocity instance."
         }
       }
     },
@@ -61,6 +81,14 @@
       }
     ],
     "commands": [
+      {
+        "command": "extension.c8y.login",
+        "title": "Login to cumulocity",
+        "icon": {
+          "light": "resources/light/start.svg",
+          "dark": "resources/dark/start.svg"
+        }
+      },
       {
         "command": "extension.apamaProjects.apamaToolCreateProject",
         "title": "Create Project",
@@ -176,6 +204,10 @@
         {
           "id": "apamaProjects",
           "name": "Apama Projects"
+        },
+        {
+          "id": "c8y",
+          "name": "Cumulocity"
         }
       ]
     },
@@ -232,6 +264,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "@c8y/client": "^1005.7.9",
     "@types/glob": "^7.1.1",
     "@types/js-yaml": "^3.12.2",
     "@types/request": "^2.48.4",
