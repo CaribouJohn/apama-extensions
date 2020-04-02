@@ -88,6 +88,10 @@
           "light": "resources/light/start.svg",
           "dark": "resources/dark/start.svg"
         }
+	  },
+	  {
+        "command": "extension.c8y.upload_epl_app",
+        "title": "Cumulocity: Upload as EPL App"
       },
       {
         "command": "extension.apamaProjects.apamaToolCreateProject",
@@ -167,7 +171,11 @@
         {
           "when": "resourceExtname == .evt",
           "command": "extension.apama.engine_send"
-        }
+		},
+		{
+			"when": "resourceExtname == .mon",
+			"command": "extension.c8y.upload_epl_app"
+		}
       ],
       "view/title": [
         {
