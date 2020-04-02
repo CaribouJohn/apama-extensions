@@ -41,7 +41,7 @@ export class cumulocityView implements vscode.TreeDataProvider<string> {
 			this.context.subscriptions.push.apply(this.context.subscriptions, [
 
 				//
-				// Login
+				// inventory
 				//
 				vscode.commands.registerCommand('extension.c8y.login', async () => {
 					let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');

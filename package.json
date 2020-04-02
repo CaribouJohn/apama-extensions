@@ -160,6 +160,10 @@
       {
         "command": "extension.apama.engine_delete",
         "title": "correlator: engine delete"
+      },
+      {
+        "command": "extension.apama.engine_watch",
+        "title": "correlator: engine watch"
       }
     ],
     "menus": {

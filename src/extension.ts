@@ -14,9 +14,8 @@ import { ApamaEnvironment } from './apama_util/apamaenvironment';
 import { ApamaTaskProvider } from './apama_util/apamataskprovider';
 import { ApamaDebugConfigurationProvider } from './apama_debug/apamadebugconfig';
 import { ApamaProjectView } from './apama_project/apamaProjectView';
-import { cumulocityView } from './c8y/cumulocityView';
 import { ApamaCommandProvider } from './apama_util/commands';//MY CHANGES
-
+import { cumulocityView } from './c8y/cumulocityView';
 //
 // client activation function, this is the entrypoint for the client
 //
@@ -71,7 +70,7 @@ function startLangServerTCP(addr: number): LanguageClient {
 	const serverOptions: ServerOptions = () => {
 	  return new Promise((resolve, reject) => {
 		const clientSocket = new net.Socket();
-		clientSocket.connect(12346, "10.60.84.57", () => {
+		clientSocket.connect(12346, "127.1.0.0", () => {
 		  resolve({
 			reader: clientSocket,
 			writer: clientSocket,

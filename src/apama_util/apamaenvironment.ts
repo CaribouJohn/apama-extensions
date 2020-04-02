@@ -22,7 +22,9 @@ const default_windows_env: string = 'apama_env.bat';
 const default_linux_send: string = 'engine_send';
 const default_windows_send: string = 'engine_send.exe';
 const default_linux_delete:string = 'engine_delete';
-const default_windows_delete:string = 'engine_delete.exe';
+const default_windows_delete: string = 'engine_delete.exe';
+const default_linux_watch: string = 'engine_watch'; 
+const default_windows_watch: string = 'engine_watch.exe';
 const default_linux_source: string = '. ';
 const default_windows_source: string = '';
 
@@ -46,6 +48,7 @@ export class ApamaEnvironment {
   private cmd_eplbuddy: string;
   private cmd_send: string;
   private cmd_delete: string;
+  private cmd_watch: string;
 
   constructor( private logger:OutputChannel ) { 
     this.workspaceConfig = workspace.getConfiguration(confignode);
@@ -64,6 +67,7 @@ export class ApamaEnvironment {
       this.cmd_eplbuddy = '';
       this.cmd_send = '';
       this.cmd_delete = '';
+      this.cmd_watch = '';
       this.updateCommands();
   }
 
@@ -93,6 +97,7 @@ export class ApamaEnvironment {
       this.cmd_eplbuddy = join(this.apamaHome, 'bin', default_linux_eplbuddy);
       this.cmd_send = join(this.apamaHome, 'bin', default_linux_send);
       this.cmd_delete = join(this.apamaHome, 'bin', default_linux_delete);
+      this.cmd_watch = join(this.apamaHome, 'bin', default_linux_watch);
     }
     else {
       this.cmd_source = default_windows_source;
@@ -105,6 +110,7 @@ export class ApamaEnvironment {
       this.cmd_eplbuddy = join(this.apamaHome, 'bin', default_windows_eplbuddy);
       this.cmd_send = join(this.apamaHome, 'bin', default_windows_send);
       this.cmd_delete = join(this.apamaHome, 'bin', default_windows_delete);
+      this.cmd_watch = join(this.apamaHome, 'bin', default_windows_watch);
     }
 
 
@@ -170,6 +176,13 @@ export class ApamaEnvironment {
     this.updateCommands();
     let r = this.sourceEnv() + ' && ' + this.cmd_eplbuddy + ' '; 
     this.logger.appendLine('starteplBuddy ' + r);
+    return r;
+  }
+
+  getEngineWatchCmdline(): string {
+    this.updateCommands();
+    let r = this.sourceEnv() + ' && ' + this.cmd_watch + ' '; 
+    this.logger.appendLine('startWatch ' + r);
     return r;
   }
 }
