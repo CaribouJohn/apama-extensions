@@ -151,8 +151,25 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 				//
 				// List alarms
 				//
-				vscode.commands.registerCommand('extension.c8y.listAlarams', () => {
-					vscode.window.showInformationMessage('Success!');
+				vscode.commands.registerCommand('extension.c8y.listAlarams', async () => {
+					try {
+						let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+						let url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01";
+
+						const result = await axios.get(url, {
+							auth: {
+								username: config.get("user", ""),
+								password: config.get("password", "")
+							}
+						});
+
+						const alarms = result.data.alarms;
+						for(let alarm of alarms) {
+							vscode.window.showInformationMessage(`${alarm.severity}: ${alarm.text}`);
+						}
+					} catch (error) {
+						debugger;
+					}
 				}),
 
 
@@ -173,17 +190,18 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 		this.filelist = [];
 		try {
 			let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-			let url: string = config.get('url',"") + "service/cep/eplfiles";
-			const options = {
+			let url: string = config.get('url',"") + "service/cep/eplfiles?contents=true";
+			
+			const result = await axios.get(url, {
 				auth: {
-					user: config.get("User", ""),
-					pass: config.get("Password", "")
+					username: config.get("user", ""),
+					password: config.get("password", "")
 				}
-			};
-			const result = await axios.get(url, options);
-			const eplfiles = JSON.parse(result);
-			//"{"eplfiles":[{"id":"713","name":"Testjbh","state":"inactive","errors":[],"warnings":[],"description":"This is a test"},{"id":"715","name":"jbh1","state":"active","errors":[],"warnings":[],"description":"jbh desc"},{"id":"719","name":"thisIsATest","state":"active","errors":[],"warnings":[],"description":"This is a test monitor uploaded from VS Code"}]}"
-			for (let element of eplfiles.eplfiles) {
+			});
+
+			const eplfiles = result.data.eplfiles;
+
+			for (let element of eplfiles) {
 				this.filelist.push(new EPLApplication(element.id,element.name, (element.state === 'inactive'),element.warnings,element.errors,element.desc,element.contents));
 			}
 

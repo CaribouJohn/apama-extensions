@@ -279,8 +279,8 @@
           "group": "inline"
         },
         {
-          "command": "extension.c8y.openEplApp",
           "when": "view == c8y",
+          "command": "extension.c8y.openEplApp",
           "group": "inline"
         }
       ]
