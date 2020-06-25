@@ -148,6 +148,13 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 					});
 				}),
 
+				//
+				// List alarms
+				//
+				vscode.commands.registerCommand('extension.c8y.listAlarams', () => {
+					vscode.window.showInformationMessage('Success!');
+				}),
+
 
 				//
 				// refresh projects
@@ -166,11 +173,11 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 		this.filelist = [];
 		try {
 			let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-			let url: string = config.get('url',"") + "service/cep/eplfiles?contents=true";
+			let url: string = config.get('url',"") + "service/cep/eplfiles";
 			const options = {
 				auth: {
-					user: config.get("user", ""),
-					pass: config.get("password", "")
+					user: config.get("User", ""),
+					pass: config.get("Password", "")
 				}
 			};
 			const result = await axios.get(url, options);

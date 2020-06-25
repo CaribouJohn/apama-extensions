@@ -66,22 +66,22 @@
         },
         "softwareag.c8y.url": {
           "type": "string",
-          "default": "https://demos.cumulocity.com/",
+          "default": "https://apamayoav.latest.stage.c8y.io/",
           "description": "Url of the cumulocity instance."
         },
         "softwareag.c8y.tenant": {
           "type": "string",
-          "default": "demos",
+          "default": "t25572799",
           "description": "Tenant Id: click on user at the top right of the cumulocity application."
         },
         "softwareag.c8y.user": {
           "type": "string",
-          "default": "user",
+          "default": "apamabld",
           "description": "User name you log in as."
         },
         "softwareag.c8y.password": {
           "type": "string",
-          "default": "pw",
+          "default": "yoavyoavyoavyoav",
           "description": "password for cumulocity."
         }
       }
@@ -224,6 +224,10 @@
       {
         "command": "extension.c8y.openEplApp",
         "title": "open EPL Application"
+      },
+      {
+        "command": "extension.c8y.listAlarams",
+        "title": "List alarams"
       }
     ],
     "menus": {
@@ -235,6 +239,10 @@
         {
           "when": "resourceExtname == .evt",
           "command": "extension.apama.engine_send"
+        },
+        {
+          "when": "resourceExtname == .mon",
+          "command": "extension.c8y.upload_epl_app"
         }
       ],
       "view/title": [
@@ -246,6 +254,11 @@
         {
           "command": "extension.apamaProjects.refresh",
           "when": "view == apamaProjects",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.c8y.refresh",
+          "when": "view == c8y",
           "group": "navigation"
         }
       ],
@@ -264,6 +277,11 @@
           "when": "view == apamaProjects && viewItem == bundle",
           "command": "extension.apamaProjects.apamaToolRemoveBundle",
           "group": "inline"
+        },
+        {
+          "command": "extension.c8y.openEplApp",
+          "when": "view == c8y",
+          "group": "inline"
         }
       ]
     },
@@ -272,6 +290,10 @@
         {
           "id": "apamaProjects",
           "name": "Apama Projects"
+        },
+        {
+          "id": "c8y",
+          "name": "EPL Applications"
         }
       ]
     },

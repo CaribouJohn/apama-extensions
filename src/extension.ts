@@ -15,7 +15,7 @@ import { ApamaDebugConfigurationProvider } from './apama_debug/apamadebugconfig'
 import { ApamaProjectView } from './apama_project/apamaProjectView';
 import { ApamaCommandProvider } from './apama_util/commands';//MY CHANGES
 import { ApamaRunner } from './apama_util/apamarunner';
-//import { CumulocityView } from './c8y/cumulocityView';
+import { CumulocityView } from './c8y/cumulocityView';
 
 var semver = require('semver');
 
@@ -46,6 +46,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 	if (workspace.workspaceFolders !== undefined) {
 		const myClonedArray = [...workspace.workspaceFolders]; 
 		const projView = new ApamaProjectView(apamaEnv, logger, myClonedArray, context);
+		const c8View = new CumulocityView(apamaEnv, logger, context);
 	}
 
 	//EPL Applications view is still WIP - needs more work 

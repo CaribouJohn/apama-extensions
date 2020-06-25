@@ -2,6 +2,7 @@ import { window, commands, Disposable, workspace, OutputChannel, TreeDataProvide
 import { ApamaProject, ApamaProjectWorkspace, ApamaTreeItem, BundleItem } from './apamaProject';
 import { ApamaRunner } from '../apama_util/apamarunner';
 import { ApamaEnvironment } from '../apama_util/apamaenvironment';
+import * as vscode from 'vscode';
 
 export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem> {
 	private _onDidChangeTreeData: EventEmitter<ApamaTreeItem | undefined> = new EventEmitter<ApamaTreeItem | undefined>();
