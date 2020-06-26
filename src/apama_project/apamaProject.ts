@@ -20,7 +20,7 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 	constructor(
 		public logger:OutputChannel,
 		public readonly label: string,
-    public readonly fsDir: string,
+    	public readonly fsDir: string,
 		public ws: WorkspaceFolder,
 		public apama_project: ApamaRunner
     ) {
@@ -28,7 +28,7 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 	}
 
 	items: ApamaProject[] = [];
-  contextValue: string = 'workspace';
+    contextValue: string = 'workspace';
 	instance: boolean = false;
 
 	//
@@ -62,7 +62,7 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 export class ApamaProject extends TreeItem  implements ApamaTreeItem {
 	constructor(
 		public logger:OutputChannel,
-    public readonly label: string,
+    	public readonly label: string,
 		public readonly fsDir: string,
 		public ws: WorkspaceFolder,
 		public apama_project: ApamaRunner
@@ -70,7 +70,7 @@ export class ApamaProject extends TreeItem  implements ApamaTreeItem {
 		super(label,TreeItemCollapsibleState.Collapsed);
 	}
 	items: BundleItem[] = [];
-  contextValue: string = 'project';	
+  	contextValue: string = 'project';	
 	instance: boolean = false;
 
 

@@ -4,25 +4,20 @@ import { ApamaEnvironment } from '../apama_util/apamaenvironment';
 import {Client, BasicAuth} from '@c8y/client';
 import * as fs from 'fs';
 
-
-
 export class EPLApplication extends vscode.TreeItem {
-	//"{"eplfiles":[{"id":"713","name":"Testjbh","state":"inactive","errors":[],"warnings":[],"description":"This is a test"},{"id":"715","name":"jbh1","state":"active","errors":[],"warnings":[],"description":"jbh desc"},{"id":"719","name":"thisIsATest","state":"active","errors":[],"warnings":[],"description":"This is a test monitor uploaded from VS Code"}]}"
 	constructor(
 		public readonly id:string, 
-		public readonly label: string, 
+		public readonly label: string,
 		public readonly active:boolean,
 		public readonly warnings:string[], 
 		public readonly errors:string[],
 		public readonly desc:string,
 		public contents:string) 
 	{
-		//{"id":"713","name":"Testjbh","state":"inactive","errors":[],"warnings":[],"description":"This is a test"}
 		super(label, vscode.TreeItemCollapsibleState.Collapsed);
 	}
 	contextValue: string = 'EPLApplication';
 }
-
 
 export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	private _onDidChangeTreeData: vscode.EventEmitter<EPLApplication | undefined> = new vscode.EventEmitter<EPLApplication | undefined>();
@@ -149,31 +144,6 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 				}),
 
 				//
-				// List alarms
-				//
-				vscode.commands.registerCommand('extension.c8y.listAlarams', async () => {
-					try {
-						let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-						let url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01";
-
-						const result = await axios.get(url, {
-							auth: {
-								username: config.get("user", ""),
-								password: config.get("password", "")
-							}
-						});
-
-						const alarms = result.data.alarms;
-						for(let alarm of alarms) {
-							vscode.window.showInformationMessage(`${alarm.severity}: ${alarm.text}`);
-						}
-					} catch (error) {
-						debugger;
-					}
-				}),
-
-
-				//
 				// refresh projects
 				//
 				vscode.commands.registerCommand('extension.c8y.refresh', async () => {
@@ -216,7 +186,7 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	// made this async so we can avoid race conditions on updates
 	//
 	async getChildren(item?: EPLApplication | undefined): Promise<undefined | EPLApplication[] > {
-		//await this.refresh();
+		
 		return this.filelist;
 	}
 

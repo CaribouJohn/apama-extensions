@@ -226,8 +226,12 @@
         "title": "open EPL Application"
       },
       {
-        "command": "extension.c8y.listAlarams",
-        "title": "List alarams"
+        "command": "extension.c8yAlarms.refresh",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
     ],
     "menus": {
@@ -260,6 +264,11 @@
           "command": "extension.c8y.refresh",
           "when": "view == c8y",
           "group": "navigation"
+        },
+        {
+          "command": "extension.c8yAlarms.refresh",
+          "when": "view == c8yAlarms",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -285,8 +294,17 @@
         }
       ]
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sag-explorer",
+          "title": "SAg Explorer",
+          "icon": "resources/emoji_emotions.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "sag-explorer": [
         {
           "id": "apamaProjects",
           "name": "Apama Projects"
@@ -294,6 +312,14 @@
         {
           "id": "c8y",
           "name": "EPL Applications"
+        },
+        {
+          "id": "apamaTests",
+          "name": "EPL Tests"
+        },
+        {
+          "id": "c8yAlarms",
+          "name": "Alarms"
         }
       ]
     },
