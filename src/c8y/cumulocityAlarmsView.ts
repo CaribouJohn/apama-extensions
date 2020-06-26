@@ -5,13 +5,23 @@ import axios from 'axios';
 
 export class Alarm extends vscode.TreeItem {
     constructor(
+        public readonly id: string,
         public readonly label: string,
         private type: string,
         private text: string,
         private severity: string,
+        private contents: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState
       ) {
         super(label, collapsibleState);
+      }
+
+      get tooltip(): string {
+          return `${this.severity}: ${this.text}`;
+      }
+
+      get description(): string {
+        return this.id;
       }
 }
 
@@ -33,7 +43,21 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
 			this.context.subscriptions.push.apply(this.context.subscriptions, [
                 vscode.commands.registerCommand('extension.c8yAlarms.refresh', async () => {
 					await this.refresh();
-                })
+                }),
+
+				vscode.commands.registerCommand('extension.c8yAlarms.openAlarm', async (element) => {
+					let setting: vscode.Uri = vscode.Uri.parse("untitled:" + element.id + ".json" );
+					vscode.workspace.openTextDocument(setting)
+						.then(doc => {
+							vscode.window.showTextDocument(doc)
+								.then(e => {
+									e.edit(edit => {
+                                        // edit.delete(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(element.contents.length, 0)));
+                                        edit.insert(new vscode.Position(0, 0), element.contents);
+								});
+						});
+					});
+				}),
             ]);
         }
     }
@@ -52,7 +76,7 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
         this.alarmList = [];
         try {
             let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-            let url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01";
+            let url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01&resolved=false";
 
             const result = await axios.get(url, {
                 auth: {
@@ -64,11 +88,15 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
             const alarms = result.data.alarms;
             for(let alarm of alarms) {
                 this.alarmList.push(new Alarm(
+                    alarm.id,
                     alarm.type, 
                     alarm.type, 
                     alarm.text, 
                     alarm.severity,
-                    vscode.TreeItemCollapsibleState.Collapsed));
+                    JSON.stringify(alarm, null, 4),
+                    vscode.TreeItemCollapsibleState.None
+                ));
+                console.log(alarm);
             }
 
         } catch (error) {
