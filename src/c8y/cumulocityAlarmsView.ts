@@ -52,7 +52,6 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
 							vscode.window.showTextDocument(doc)
 								.then(e => {
 									e.edit(edit => {
-                                        // edit.delete(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(element.contents.length, 0)));
                                         edit.insert(new vscode.Position(0, 0), element.contents);
 								});
 						});
@@ -96,7 +95,6 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
                     JSON.stringify(alarm, null, 4),
                     vscode.TreeItemCollapsibleState.None
                 ));
-                console.log(alarm);
             }
 
         } catch (error) {

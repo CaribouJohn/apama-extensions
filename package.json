@@ -17,7 +17,8 @@
   "activationEvents": [
     "onLanguage:epl",
     "onDebug",
-    "onView:apamaProjects"
+    "onView:apamaProjects",
+    "onView:c8y"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -83,6 +84,11 @@
           "type": "string",
           "default": "yoavyoavyoavyoav",
           "description": "password for cumulocity."
+        },
+        "softwareag.c8y.enabled": {
+          "type": "boolean",
+          "default": "false",
+          "description": "enable the EPL app view"
         }
       }
     },
@@ -171,6 +177,14 @@
         "icon": {
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "extension.c8y.toggleEnabled",
+        "title": "Disable",
+        "icon": {
+          "light": "resources/light/power_off.svg",
+          "dark": "resources/dark/power_off.svg"
         }
       },
       {
@@ -270,7 +284,12 @@
         },
         {
           "command": "extension.c8y.refresh",
-          "when": "view == c8y",
+          "when": "view == c8y && config.softwareag.c8y.enabled",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.c8y.toggleEnabled",
+          "when": "view == c8y && config.softwareag.c8y.enabled",
           "group": "navigation"
         },
         {
@@ -310,14 +329,21 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "sag-explorer",
-          "title": "SAg Explorer",
+          "id": "apama-explorer",
+          "title": "APAMA Explorer",
           "icon": "resources/emoji_emotions.svg"
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "c8y",
+        "contents": "This view is disabled. \n[Enable](command:extension.c8y.toggleEnabled)",
+        "when": "!config.softwareag.c8y.enabled"
+      }
+    ],
     "views": {
-      "sag-explorer": [
+      "apama-explorer": [
         {
           "id": "apamaProjects",
           "name": "Apama Projects"
@@ -332,7 +358,7 @@
         },
         {
           "id": "c8yAlarms",
-          "name": "Alarms"
+          "name": "Cumulocity Platform"
         }
       ]
     },

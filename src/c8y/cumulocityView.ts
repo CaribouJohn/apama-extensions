@@ -131,16 +131,20 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 				// open EPL App 
 				//
 				vscode.commands.registerCommand('extension.c8y.openEplApp', async (element) => {
-					let setting: vscode.Uri = vscode.Uri.parse("untitled:" + element.label + ".mon" );
+					//TODO: this needs some tweaking ..
+					const setting: vscode.Uri = vscode.workspace.workspaceFolders ?
+						vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, `/.eplapps/${element.label}.mon`) : 
+						vscode.Uri.parse("untitled:" + element.label + ".mon");
+
 					vscode.workspace.openTextDocument(setting)
 						.then(doc => {
 							vscode.window.showTextDocument(doc)
 								.then(e => {
 									e.edit(edit => {
-									edit.insert(new vscode.Position(0, 0), element.contents);
+										edit.insert(new vscode.Position(0, 0), element.contents);
+									});
 								});
 						});
-					});
 				}),
 
 				//
@@ -172,7 +176,15 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 			const eplfiles = result.data.eplfiles;
 
 			for (let element of eplfiles) {
-				this.filelist.push(new EPLApplication(element.id,element.name, (element.state === 'inactive'),element.warnings,element.errors,element.desc,element.contents));
+				if(!element.name.startsWith("PYSYS") && vscode.workspace.workspaceFolders) {
+					this.filelist.push(new EPLApplication(element.id,element.name, (element.state === 'inactive'),element.warnings,element.errors,element.desc,element.contents));
+					
+					vscode.workspace.fs.writeFile(
+						vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, `/.eplapps/${element.name}.mon`),
+						Buffer.from(element.contents, 'utf8')
+					);
+				}
+
 			}
 
 		} catch (error) {
