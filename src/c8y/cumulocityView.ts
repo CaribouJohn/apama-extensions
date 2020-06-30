@@ -38,6 +38,12 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 
 		//the component
 		this.treeView = vscode.window.createTreeView('c8y', { treeDataProvider: this });
+
+		vscode.workspace.onDidChangeConfiguration(async e => {
+			if(e.affectsConfiguration('softwareag.c8y.enabled')) {
+				await this.refresh();
+			}
+		});
 	}
 	processResponse(resp: any): void {
 		this.logger.appendLine("Status:" + resp.res.status + " " + resp.res.statusText);
@@ -84,6 +90,17 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 							debugger;
 						}
 							
+					}
+				}),
+
+				vscode.commands.registerCommand('extension.c8y.toggleEnabled', async () => {
+					const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+					const enabled = config.get("enabled");
+					console.log(config.get("enabled"));
+					if(enabled) {
+						await config.update("enabled", false, true);
+					} else {
+						await config.update("enabled", true, true);
 					}
 				}),
 				
@@ -151,7 +168,10 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 				// refresh projects
 				//
 				vscode.commands.registerCommand('extension.c8y.refresh', async () => {
-					await this.refresh();
+					let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+					if(config.get("enabled") === true) {
+						await this.refresh();
+					}
 				})
 			]);
 		}
@@ -162,33 +182,36 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	//
 	async refresh(): Promise<void> {
 		this.filelist = [];
-		try {
-			let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-			let url: string = config.get('url',"") + "service/cep/eplfiles?contents=true";
-			
-			const result = await axios.get(url, {
-				auth: {
-					username: config.get("user", ""),
-					password: config.get("password", "")
+		let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+		if(config.get("enabled") === true ) {
+			try {
+				let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+				let url: string = config.get('url',"") + "service/cep/eplfiles?contents=true";
+				
+				const result = await axios.get(url, {
+					auth: {
+						username: config.get("user", ""),
+						password: config.get("password", "")
+					}
+				});
+	
+				const eplfiles = result.data.eplfiles;
+	
+				for (let element of eplfiles) {
+					if(!element.name.startsWith("PYSYS") && vscode.workspace.workspaceFolders) {
+						this.filelist.push(new EPLApplication(element.id,element.name, (element.state === 'inactive'),element.warnings,element.errors,element.desc,element.contents));
+						
+						vscode.workspace.fs.writeFile(
+							vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, `/.eplapps/${element.name}.mon`),
+							Buffer.from(element.contents, 'utf8')
+						);
+					}
+	
 				}
-			});
-
-			const eplfiles = result.data.eplfiles;
-
-			for (let element of eplfiles) {
-				if(!element.name.startsWith("PYSYS") && vscode.workspace.workspaceFolders) {
-					this.filelist.push(new EPLApplication(element.id,element.name, (element.state === 'inactive'),element.warnings,element.errors,element.desc,element.contents));
-					
-					vscode.workspace.fs.writeFile(
-						vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, `/.eplapps/${element.name}.mon`),
-						Buffer.from(element.contents, 'utf8')
-					);
-				}
-
+	
+			} catch (error) {
+				debugger;
 			}
-
-		} catch (error) {
-			debugger;
 		}
 		this._onDidChangeTreeData.fire(undefined);
 	}
