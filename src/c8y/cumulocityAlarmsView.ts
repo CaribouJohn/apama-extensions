@@ -10,10 +10,9 @@ export class Alarm extends vscode.TreeItem {
         private type: string,
         private text: string,
         private severity: string,
-        private contents: string,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState
+        private contents: string
       ) {
-        super(label, collapsibleState);
+        super(label, vscode.TreeItemCollapsibleState.None);
       }
 
       get tooltip(): string {
@@ -32,6 +31,12 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
         this.registerCommands();
         this.refresh();
         this.treeView = vscode.window.createTreeView('c8yAlarms', { treeDataProvider: this });
+
+        vscode.workspace.onDidChangeConfiguration(async e => {
+			if(e.affectsConfiguration('softwareag.c8yAlarms.enabled')) {
+				await this.refresh();
+			}
+		});
     }
     
     private _onDidChangeTreeData: vscode.EventEmitter<Alarm | undefined> = new vscode.EventEmitter<Alarm | undefined>();
@@ -56,7 +61,12 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
 								});
 						});
 					});
-				}),
+                }),
+                
+                vscode.commands.registerCommand('extension.c8yAlarms.toggleEnabled', async () => {
+					const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8yAlarms');
+					config.update("enabled", !config.get("enabled"), true);
+				})
             ]);
         }
     }
@@ -73,32 +83,34 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
 
     async refresh(): Promise<void> {
         this.alarmList = [];
-        try {
-            let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-            let url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01&resolved=false";
-
-            const result = await axios.get(url, {
-                auth: {
-                    username: config.get("user", ""),
-                    password: config.get("password", "")
+        let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8yAlarms');
+        if(config.get("enabled") === true) {
+            try {
+                config = vscode.workspace.getConfiguration('softwareag.c8y');
+                let url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01&resolved=false";
+    
+                const result = await axios.get(url, {
+                    auth: {
+                        username: config.get("user", ""),
+                        password: config.get("password", "")
+                    }
+                });
+    
+                const alarms = result.data.alarms;
+                for(let alarm of alarms) {
+                    this.alarmList.push(new Alarm(
+                        alarm.id,
+                        alarm.type, 
+                        alarm.type, 
+                        alarm.text, 
+                        alarm.severity,
+                        JSON.stringify(alarm, null, 4)
+                    ));
                 }
-            });
-
-            const alarms = result.data.alarms;
-            for(let alarm of alarms) {
-                this.alarmList.push(new Alarm(
-                    alarm.id,
-                    alarm.type, 
-                    alarm.type, 
-                    alarm.text, 
-                    alarm.severity,
-                    JSON.stringify(alarm, null, 4),
-                    vscode.TreeItemCollapsibleState.None
-                ));
+    
+            } catch (error) {
+                debugger;
             }
-
-        } catch (error) {
-            debugger;
         }
 
         this._onDidChangeTreeData.fire(undefined);

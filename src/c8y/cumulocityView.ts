@@ -14,7 +14,7 @@ export class EPLApplication extends vscode.TreeItem {
 		public readonly desc:string,
 		public contents:string) 
 	{
-		super(label, vscode.TreeItemCollapsibleState.Collapsed);
+		super(label, vscode.TreeItemCollapsibleState.None);
 	}
 	contextValue: string = 'EPLApplication';
 }
@@ -39,6 +39,8 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 		//the component
 		this.treeView = vscode.window.createTreeView('c8y', { treeDataProvider: this });
 
+		this.refresh();
+
 		vscode.workspace.onDidChangeConfiguration(async e => {
 			if(e.affectsConfiguration('softwareag.c8y.enabled')) {
 				await this.refresh();
@@ -60,12 +62,11 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	registerCommands(): void {
 		if (this.context !== undefined) {
 			this.context.subscriptions.push.apply(this.context.subscriptions, [
-
 				//
 				// inventory using sdk
 				//
 				vscode.commands.registerCommand('extension.c8y.login', async () => {
-					let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+					const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
 
 					if( config ) {
 						let tenant:string = config.get('tenant',"");
@@ -95,17 +96,12 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 
 				vscode.commands.registerCommand('extension.c8y.toggleEnabled', async () => {
 					const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-					const enabled = config.get("enabled");
-					console.log(config.get("enabled"));
-					if(enabled) {
-						await config.update("enabled", false, true);
-					} else {
-						await config.update("enabled", true, true);
-					}
+					config.update("enabled", !config.get("enabled"), true);
 				}),
 				
 				vscode.commands.registerCommand('extension.c8y.upload_epl_app', async (uri) => {
 					try {
+						const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
 						let appname = uri.path;
 						const lastPathSepIndex = appname.lastIndexOf('/');
 						if (lastPathSepIndex >= 0) {
@@ -116,7 +112,6 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 							appname = appname.slice(0, -4);
 						}
 
-						let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
 						let url: string = config.get('url',""); // C8Y host
 						if (!url.endsWith("/")) {
 							url += "/";
@@ -168,10 +163,7 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 				// refresh projects
 				//
 				vscode.commands.registerCommand('extension.c8y.refresh', async () => {
-					let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
-					if(config.get("enabled") === true) {
-						await this.refresh();
-					}
+					await this.refresh();
 				})
 			]);
 		}
@@ -182,10 +174,10 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	//
 	async refresh(): Promise<void> {
 		this.filelist = [];
-		let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+		const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+		
 		if(config.get("enabled") === true ) {
 			try {
-				let config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
 				let url: string = config.get('url',"") + "service/cep/eplfiles?contents=true";
 				
 				const result = await axios.get(url, {
@@ -224,8 +216,6 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 		
 		return this.filelist;
 	}
-
-
 
 	//
 	// interface requirement

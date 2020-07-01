@@ -18,7 +18,8 @@
     "onLanguage:epl",
     "onDebug",
     "onView:apamaProjects",
-    "onView:c8y"
+    "onView:c8y",
+    "onView:c8yAlarms"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -89,6 +90,11 @@
           "type": "boolean",
           "default": "false",
           "description": "enable the EPL app view"
+        },
+        "softwareag.c8yAlarms.enabled": {
+          "type": "boolean",
+          "default": "false",
+          "description": "enable the Cumulocity Platform view"
         }
       }
     },
@@ -237,7 +243,11 @@
       },
       {
         "command": "extension.c8y.openEplApp",
-        "title": "open EPL Application"
+        "title": "open",
+        "icon": {
+          "light": "resources/light/open-file.svg",
+          "dark": "resources/dark/open-file.svg"
+        }
       },
       {
         "command": "extension.c8yAlarms.openAlarm",
@@ -253,6 +263,14 @@
         "icon": {
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "extension.c8yAlarms.toggleEnabled",
+        "title": "Disable",
+        "icon": {
+          "light": "resources/light/power_off.svg",
+          "dark": "resources/dark/power_off.svg"
         }
       }
     ],
@@ -295,6 +313,11 @@
         {
           "command": "extension.c8yAlarms.refresh",
           "when": "view == c8yAlarms",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.c8yAlarms.toggleEnabled",
+          "when": "view == c8yAlarms && config.softwareag.c8yAlarms.enabled",
           "group": "navigation"
         }
       ],
@@ -340,6 +363,11 @@
         "view": "c8y",
         "contents": "This view is disabled. \n[Enable](command:extension.c8y.toggleEnabled)",
         "when": "!config.softwareag.c8y.enabled"
+      },
+      {
+        "view": "c8yAlarms",
+        "contents": "This view is disabled. \n[Enable](command:extension.c8yAlarms.toggleEnabled)",
+        "when": "!config.softwareag.c8yAlarms.enabled"
       }
     ],
     "views": {
