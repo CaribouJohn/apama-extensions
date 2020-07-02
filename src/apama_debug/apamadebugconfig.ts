@@ -15,8 +15,9 @@ export class ApamaDebugConfigurationProvider implements DebugConfigurationProvid
     /**
      *  Return an initial debug configuration
      */
+    // todo do we need folder here
     provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
-        let config = workspace.getConfiguration("softwareag.apama");
+        const config = workspace.getConfiguration("softwareag.apama");
         return [ {
             type: "apama",
             name: "Debug Apama Application",
@@ -65,7 +66,7 @@ export class ApamaDebugConfigurationProvider implements DebugConfigurationProvid
         if (!this._server) {
             console.log("starting listening server");
             this._server = Net.createServer(socket => {
-                let session = new CorrelatorDebugSession(this.logger, this.apamaEnv, config.correlator);
+                const session = new CorrelatorDebugSession(this.logger, this.apamaEnv, config.correlator);
                 session.setRunAsServer(true);
                 session.start(<NodeJS.ReadableStream>socket, socket);
             }).listen(0);
@@ -80,7 +81,7 @@ export class ApamaDebugConfigurationProvider implements DebugConfigurationProvid
 		return config;
 	}
 
-	dispose() {
+	dispose(): void  {
 		if (this._server) {
             this._server.close();
 		}
@@ -89,8 +90,8 @@ export class ApamaDebugConfigurationProvider implements DebugConfigurationProvid
 
 function getInjectionList(apamaEnv: ApamaEnvironment, workspaceFolderPath: string) {
 
-    let cmd : string = apamaEnv.getDeployCmdline();
-    let output: string = execFileSync(cmd , ['--outputList', 'stdout', workspaceFolderPath], {
+    const cmd : string = apamaEnv.getDeployCmdline();
+    const output: string = execFileSync(cmd , ['--outputList', 'stdout', workspaceFolderPath], {
         encoding: 'utf8'
     });
 

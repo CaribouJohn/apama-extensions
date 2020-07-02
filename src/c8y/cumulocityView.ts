@@ -1,7 +1,7 @@
 const axios = require('axios').default;
 import * as vscode from 'vscode';
 import { ApamaEnvironment } from '../apama_util/apamaenvironment';
-import {Client, BasicAuth} from '@c8y/client';
+//import {Client, BasicAuth} from '@c8y/client';
 import * as fs from 'fs';
 
 export class EPLApplication extends vscode.TreeItem {
@@ -65,34 +65,34 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 				//
 				// inventory using sdk
 				//
-				vscode.commands.registerCommand('extension.c8y.login', async () => {
-					const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
+				// vscode.commands.registerCommand('extension.c8y.login', async () => {
+				// 	const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
 
-					if( config ) {
-						let tenant:string = config.get('tenant',"");
-						let user:string = config.get('user',"");
-						let password:string = config.get('password',"");
-						let baseurl:any = config.get('url',"");
-						this.logger.appendLine("Logging into c8y");
+				// 	if( config ) {
+				// 		let tenant:string = config.get('tenant',"");
+				// 		let user:string = config.get('user',"");
+				// 		let password:string = config.get('password',"");
+				// 		let baseurl:any = config.get('url',"");
+				// 		this.logger.appendLine("Logging into c8y");
 
-						let x = new BasicAuth({
-							tenant,
-							user,
-							password
-						});
+				// 		let x = new BasicAuth({
+				// 			tenant,
+				// 			user,
+				// 			password
+				// 		});
 
-						let client = new Client(x,baseurl);
+				// 		let client = new Client(x,baseurl);
 
-						try {
-							let y = await client.inventory.list();
-							let z = y.data;
-						}
-						catch (err) {
-							debugger;
-						}
+				// 		try {
+				// 			let y = await client.inventory.list();
+				// 			let z = y.data;
+				// 		}
+				// 		catch (err) {
+				// 			debugger;
+				// 		}
 							
-					}
-				}),
+				// 	}
+				// }),
 
 				vscode.commands.registerCommand('extension.c8y.toggleEnabled', async () => {
 					const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('softwareag.c8y');
