@@ -1,4 +1,5 @@
-const axios = require('axios').default;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import axios, { AxiosResponse }  from 'axios';
 import * as vscode from 'vscode';
 import { ApamaEnvironment } from '../apama_util/apamaenvironment';
 //import {Client, BasicAuth} from '@c8y/client';
@@ -16,14 +17,14 @@ export class EPLApplication extends vscode.TreeItem {
 	{
 		super(label, vscode.TreeItemCollapsibleState.None);
 	}
-	contextValue: string = 'EPLApplication';
+	contextValue = 'EPLApplication';
 }
 
 export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	private _onDidChangeTreeData: vscode.EventEmitter<EPLApplication | undefined> = new vscode.EventEmitter<EPLApplication | undefined>();
 	readonly onDidChangeTreeData: vscode.Event<EPLApplication | undefined> = this._onDidChangeTreeData.event;
 
-	private treeView: vscode.TreeView<{}>;
+	private treeView: vscode.TreeView<string|EPLApplication>;
 	private filelist:EPLApplication[] = [];
 
 	//
@@ -31,7 +32,7 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	// ssh remote etc to work better later on, plus allows some extra organisational
 	// facilities....
 	constructor(private apamaEnv: ApamaEnvironment, private logger: vscode.OutputChannel, private context?: vscode.ExtensionContext) {
-		let subscriptions: vscode.Disposable[] = [];
+		//const subscriptions: vscode.Disposable[] = [];
 		
 		//project commands 
 		this.registerCommands();
@@ -131,7 +132,7 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 							json: true
 						};
 						options.body.contents = fs.readFileSync(uri.fsPath).toString();
-						const result = await axios.post(url, options);
+						const result: AxiosResponse = await axios.post(url, options);
 						// console.log(JSON.stringify(result));
 						// TODO: show errors/warnings
 					} catch (error) {
@@ -178,7 +179,7 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 		
 		if(config.get("enabled") === true ) {
 			try {
-				let url: string = config.get('url',"") + "service/cep/eplfiles?contents=true";
+				const url: string = config.get('url',"") + "service/cep/eplfiles?contents=true";
 				
 				const result = await axios.get(url, {
 					auth: {
@@ -189,7 +190,7 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	
 				const eplfiles = result.data.eplfiles;
 	
-				for (let element of eplfiles) {
+				for (const element of eplfiles) {
 					if(!element.name.startsWith("PYSYS") && vscode.workspace.workspaceFolders) {
 						this.filelist.push(new EPLApplication(element.id,element.name, (element.state === 'inactive'),element.warnings,element.errors,element.desc,element.contents));
 						
@@ -202,6 +203,7 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 				}
 	
 			} catch (error) {
+				// eslint-disable-next-line no-debugger
 				debugger;
 			}
 		}
@@ -212,6 +214,8 @@ export class CumulocityView implements vscode.TreeDataProvider<EPLApplication> {
 	// get the children of the current item (group or item)
 	// made this async so we can avoid race conditions on updates
 	//
+	// todo: do we need to use item here? this will need to changed to return undefined 
+	// this would cause infinte expansion otherwise
 	async getChildren(item?: EPLApplication | undefined): Promise<undefined | EPLApplication[] > {
 		
 		return this.filelist;

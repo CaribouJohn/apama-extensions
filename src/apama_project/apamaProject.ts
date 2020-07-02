@@ -1,4 +1,4 @@
-import { OutputChannel, TreeItem, TreeItemCollapsibleState, Command, WorkspaceFolder, Uri, RelativePattern, workspace } from 'vscode';
+import { OutputChannel, TreeItem, TreeItemCollapsibleState, WorkspaceFolder, Uri, RelativePattern, workspace } from 'vscode';
 import * as path from 'path';
 import { ApamaRunner } from '../apama_util/apamarunner';
 
@@ -20,7 +20,7 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 	constructor(
 		public logger:OutputChannel,
 		public readonly label: string,
-    	public readonly fsDir: string,
+		public readonly fsDir: string,
 		public ws: WorkspaceFolder,
 		public apama_project: ApamaRunner
     ) {
@@ -28,25 +28,25 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 	}
 
 	items: ApamaProject[] = [];
-    contextValue: string = 'workspace';
-	instance: boolean = false;
+    contextValue = 'workspace';
+	instance = false;
 
 	//
 	// Find all the projects 
 	//
 	async scanProjects(): Promise<ApamaProject[]> {
 
-		let result: ApamaProject[] = [];
+		const result: ApamaProject[] = [];
 
 		//find .projects, but exclude anything with _deployed suffix
 		//also covers all roots of a multi root workspace
-		let projectsPattern: RelativePattern = new RelativePattern( this.ws , "**/.project" );
-		let ignorePattern: RelativePattern = new RelativePattern( this.ws , "**/*_deployed/**" );
-		let projectNames = await workspace.findFiles( projectsPattern, ignorePattern);
+		const projectsPattern: RelativePattern = new RelativePattern( this.ws , "**/.project" );
+		const ignorePattern: RelativePattern = new RelativePattern( this.ws , "**/*_deployed/**" );
+		const projectNames = await workspace.findFiles( projectsPattern, ignorePattern);
 		
 		for (let index = 0; index < projectNames.length; index++) {
 			const project: Uri = projectNames[index];
-			let current: ApamaProject = new ApamaProject(this.logger,
+			const current: ApamaProject = new ApamaProject(this.logger,
 				path.relative(this.ws.uri.fsPath, path.dirname(project.fsPath)),
 				path.dirname(project.fsPath),
 				this.ws,
@@ -62,7 +62,7 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 export class ApamaProject extends TreeItem  implements ApamaTreeItem {
 	constructor(
 		public logger:OutputChannel,
-    	public readonly label: string,
+		public readonly label: string,
 		public readonly fsDir: string,
 		public ws: WorkspaceFolder,
 		public apama_project: ApamaRunner
@@ -70,18 +70,18 @@ export class ApamaProject extends TreeItem  implements ApamaTreeItem {
 		super(label,TreeItemCollapsibleState.Collapsed);
 	}
 	items: BundleItem[] = [];
-  	contextValue: string = 'project';	
-	instance: boolean = false;
+	contextValue = 'project';	
+	instance = false;
 
 
 	//
 	// Use apama project tool to populate ApamaProject objects list of Bundles
 	//
 	async getBundlesFromProject(): Promise<BundleItem[]> {
-		let items : BundleItem[] = [];
-		let result = await this.apama_project.run(this.fsDir, ['list','bundles']);
-		let withinInstalledRegion: boolean = false;
-		let lines: string[] = result.stdout.split(/\r?\n/);
+		const items : BundleItem[] = [];
+		const result = await this.apama_project.run(this.fsDir, ['list','bundles']);
+		let withinInstalledRegion = false;
+		const lines: string[] = result.stdout.split(/\r?\n/);
 		let previousBundle: BundleItem;
 		lines.forEach((item) => {
 			//skipped until "Bundles that have already been added:"
@@ -135,6 +135,6 @@ export class BundleItem extends TreeItem implements ApamaTreeItem {
 		super(label, TreeItemCollapsibleState.Collapsed);
 	}
 	items: BundleItem[] = [];
-	contextValue: string = 'bundle';
-	instance: boolean = false;
+	contextValue = 'bundle';
+	instance = false;
 }

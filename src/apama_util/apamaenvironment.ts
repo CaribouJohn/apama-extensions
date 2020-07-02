@@ -4,33 +4,33 @@ import { join } from 'path';
 
 
 
-const confignode: string = 'softwareag.apama';
-const default_linux_correlator: string = 'correlator';
-const default_windows_correlator: string = 'correlator.exe';
-const default_linux_deploy: string = 'engine_deploy';
-const default_windows_deploy: string = 'engine_deploy.exe';
-const default_linux_inject: string = 'engine_inject';
-const default_windows_inject: string = 'engine_inject.exe';
-const default_linux_project: string = 'apama_project';
-const default_windows_project: string = 'apama_project.exe';
-const default_linux_management: string = 'engine_management';
-const default_windows_management: string = 'engine_management.exe';
-const default_linux_eplbuddy: string = 'eplbuddy';
-const default_windows_eplbuddy: string = 'eplbuddy.exe';
-const default_linux_env: string = 'apama_env';
-const default_windows_env: string = 'apama_env.bat';
-const default_linux_send: string = 'engine_send';
-const default_windows_send: string = 'engine_send.exe';
-const default_linux_delete:string = 'engine_delete';
-const default_windows_delete: string = 'engine_delete.exe';
-const default_linux_watch: string = 'engine_watch'; 
-const default_windows_watch: string = 'engine_watch.exe';
-const default_linux_receive: string = 'engine_receive'; 
-const default_windows_receive: string = 'engine_receive.exe';
-const default_linux_inspect: string = 'engine_inspect'; 
-const default_windows_inspect: string = 'engine_inspect.exe';
-const default_linux_source: string = '. ';
-const default_windows_source: string = '';
+const confignode = 'softwareag.apama';
+const default_linux_correlator = 'correlator';
+const default_windows_correlator = 'correlator.exe';
+const default_linux_deploy = 'engine_deploy';
+const default_windows_deploy = 'engine_deploy.exe';
+const default_linux_inject = 'engine_inject';
+const default_windows_inject = 'engine_inject.exe';
+const default_linux_project = 'apama_project';
+const default_windows_project = 'apama_project.exe';
+const default_linux_management = 'engine_management';
+const default_windows_management = 'engine_management.exe';
+const default_linux_eplbuddy = 'eplbuddy';
+const default_windows_eplbuddy = 'eplbuddy.exe';
+const default_linux_env = 'apama_env';
+const default_windows_env = 'apama_env.bat';
+const default_linux_send = 'engine_send';
+const default_windows_send = 'engine_send.exe';
+const default_linux_delete = 'engine_delete';
+const default_windows_delete = 'engine_delete.exe';
+const default_linux_watch = 'engine_watch'; 
+const default_windows_watch = 'engine_watch.exe';
+const default_linux_receive = 'engine_receive'; 
+const default_windows_receive = 'engine_receive.exe';
+const default_linux_inspect = 'engine_inspect'; 
+const default_windows_inspect = 'engine_inspect.exe';
+const default_linux_source = '. ';
+const default_windows_source = '';
 
 
 export class ApamaEnvironment {
@@ -135,7 +135,7 @@ export class ApamaEnvironment {
 
   getCorrelatorCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_correlator + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_correlator + ' '; 
     //this.logger.appendLine('startCorrelator ' + r);
     return r;
   }
@@ -143,21 +143,21 @@ export class ApamaEnvironment {
   //doesn't need environment
   getDeployCmdline(): string {
     this.updateCommands();
-    let r = this.cmd_deploy + ' '; 
+    const r = this.cmd_deploy + ' '; 
     //this.logger.appendLine('startDeploy ' + r);
     return r;
   }
 
   getInjectCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_inject + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_inject + ' '; 
     //this.logger.appendLine('startInject ' + r);
     return r;
   }
 
   getSendCmdLine(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_send + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_send + ' '; 
     //this.logger.appendLine('startSend ' + r);
     return r;
 
@@ -165,48 +165,48 @@ export class ApamaEnvironment {
 
   getDeleteCmdLine(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_delete + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_delete + ' '; 
     //this.logger.appendLine('startDelete ' + r);
     return r;
   }
 
   getApamaProjectCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_project + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_project + ' '; 
     //this.logger.appendLine('startProject ' + r);
     return r;
   }
 
   getManagerCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_management + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_management + ' '; 
     //this.logger.appendLine('startManager ' + r);
     return r;
   }
 
   getEplBuddyCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_eplbuddy + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_eplbuddy + ' '; 
     //this.logger.appendLine('starteplBuddy ' + r);
     return r;
   }
 
   getEngineWatchCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_watch + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_watch + ' '; 
     //this.logger.appendLine('startWatch ' + r);
     return r;
   }
 
   getEngineReceiveCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_receive + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_receive + ' '; 
     return r;
   }
 
   getEngineInspectCmdline(): string {
     this.updateCommands();
-    let r = this.sourceEnv() + ' && ' + this.cmd_inspect + ' '; 
+    const r = this.sourceEnv() + ' && ' + this.cmd_inspect + ' '; 
     return r;
   }
 

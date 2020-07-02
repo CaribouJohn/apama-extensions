@@ -22,14 +22,14 @@ export class ApamaCommandProvider {
   registerCommands(): void {
 
     if (this.context !== undefined) {
-      let port: any = workspace.getConfiguration("softwareag.apama").get("debugport");
+      const port: number = workspace.getConfiguration("softwareag.apama").get("debugport",15904);
       this.context.subscriptions.push.apply(this.context.subscriptions,
         [
           //
           // engine_inject command
           //
           commands.registerCommand('extension.apama.engine_inject', async (monFile) => {
-            if (monFile !== undefined) {
+            if (monFile !== undefined ) {
               // Display prompt to receive port
               const userInput = await window.showInputBox({
                 value: port.toString(),
@@ -108,7 +108,7 @@ export class ApamaCommandProvider {
   }
 
 
-  dispose() {
+  dispose(): void {
     return;
   }
 
@@ -143,9 +143,10 @@ export class ApamaCommandProvider {
     });
   }
 
+  // todo: check signal and see if we need to use it.
   onExit(childProcess: ChildProcess): Promise<void> {
     return new Promise((resolve, reject) => {
-      childProcess.once('exit', (code: number, signal: string) => {
+      childProcess.once('exit', (code: number, signal?: string) => {
         if (code === 0) {
           resolve(undefined);
         } else {

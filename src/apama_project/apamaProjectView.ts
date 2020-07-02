@@ -1,8 +1,7 @@
-import { window, commands, Disposable, workspace, OutputChannel, TreeDataProvider, EventEmitter, Event, TreeView, FileSystemWatcher, ExtensionContext, QuickPickItem, TextDocument, Uri, TreeItemCollapsibleState, TreeItem, WorkspaceFolder, RelativePattern } from 'vscode';
+import { window, commands, workspace, OutputChannel, TreeDataProvider, EventEmitter, Event, FileSystemWatcher, ExtensionContext, QuickPickItem, TreeItemCollapsibleState, TreeItem, WorkspaceFolder } from 'vscode';
 import { ApamaProject, ApamaProjectWorkspace, ApamaTreeItem, BundleItem } from './apamaProject';
 import { ApamaRunner } from '../apama_util/apamarunner';
 import { ApamaEnvironment } from '../apama_util/apamaenvironment';
-import * as vscode from 'vscode';
 
 export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem> {
 	private _onDidChangeTreeData: EventEmitter<ApamaTreeItem | undefined> = new EventEmitter<ApamaTreeItem | undefined>();
@@ -11,9 +10,7 @@ export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem
 	//we want to have a list of top level nodes (projects)
 	private workspaceList: ApamaProjectWorkspace[] = []; 
 	
-	private projects: ApamaProject[] = [];
 
-	private treeView: TreeView<{}>;
 
 	private fsWatcher: FileSystemWatcher;
 	private delWatcher: FileSystemWatcher;
@@ -24,12 +21,11 @@ export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem
 	// Added facilities for multiple workspaces - this will hopefully allow 
 	// ssh remote etc to work better later on, plus allows some extra organisational
 	// facilities....
-	constructor(private apamaEnv: ApamaEnvironment, private logger: OutputChannel, private workspaces: WorkspaceFolder[], private context?: ExtensionContext) {
-		let subscriptions: Disposable[] = [];
+	constructor(apamaEnv: ApamaEnvironment, private logger: OutputChannel, workspaces: WorkspaceFolder[], private context?: ExtensionContext) {
+		//let subscriptions: Disposable[] = [];
 		
 		this.apama_project = new ApamaRunner('apama_project', apamaEnv.getApamaProjectCmdline(), logger);
 		this.apama_deploy = new ApamaRunner('apama_deploy', apamaEnv.getDeployCmdline(), logger);
-		let ws: WorkspaceFolder;
 		workspaces.forEach( ws => this.workspaceList.push(new ApamaProjectWorkspace(logger,ws.name,ws.uri.fsPath,ws,this.apama_project) ) );
 		
 
@@ -41,18 +37,16 @@ export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem
 		//but for deletions of the entire space we need 
 		this.delWatcher = workspace.createFileSystemWatcher("**/*"); //if you delete a directory it will not trigger all contents
 		//handlers 
-		this.fsWatcher.onDidCreate((item) => {
+		this.fsWatcher.onDidCreate(() => {
 			this.refresh();
 		});
 		this.delWatcher.onDidDelete(() => { 
 			this.refresh();
 		});
-		this.fsWatcher.onDidChange((item) => {
+		this.fsWatcher.onDidChange(() => {
 			this.refresh();
 		});
 
-		//the component
-		this.treeView = window.createTreeView('apamaProjects', { treeDataProvider: this });
 	}
 
 	registerCommands(): void {
@@ -84,8 +78,8 @@ export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem
 				commands.registerCommand('extension.apamaProjects.apamaToolAddBundles', (project: ApamaProject) => {
 					this.apama_project.run(project.fsDir, ['list', 'bundles'])
 						.then((result) => {
-							let lines: string[] = result.stdout.split(/\r?\n/);
-							let displayList: QuickPickItem[] = [];
+							const lines: string[] = result.stdout.split(/\r?\n/);
+							const displayList: QuickPickItem[] = [];
 							lines.forEach((item) => {
 								item = item.trim();
 								//matches number followed by text
@@ -130,7 +124,7 @@ export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem
 				//
 				// Placeholder for clicking on a bundle/project - will open files possibly or navigate to the right directory.
 				//
-				commands.registerCommand('extension.apamaProjects.SelectItem', (document: TextDocument) => {
+				commands.registerCommand('extension.apamaProjects.SelectItem', () => {
 					//this.logger.appendLine(document.fileName);
 					return;
 				}),
@@ -171,7 +165,7 @@ export class ApamaProjectView implements TreeDataProvider<string | ApamaTreeItem
 		//if this is a project - we should have set up the bundles now
 		if (item instanceof ApamaProject) {
 			//lets get the bundles 
-			let index = this.workspaceList[item.ws.index].items.findIndex( proj => proj === item );
+			const index = this.workspaceList[item.ws.index].items.findIndex( proj => proj === item );
 			this.workspaceList[item.ws.index].items[index].items = await item.getBundlesFromProject();
 			return this.workspaceList[item.ws.index].items[index].items;
 		}

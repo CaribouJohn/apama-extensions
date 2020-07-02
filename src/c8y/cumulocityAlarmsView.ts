@@ -1,4 +1,3 @@
-import { VersionedTextDocumentIdentifier } from "vscode-languageclient";
 
 import * as vscode from 'vscode';
 import axios from 'axios';
@@ -7,11 +6,8 @@ export class Alarm extends vscode.TreeItem {
     constructor(
         public readonly id: string,
         public readonly label: string,
-        private type: string,
         private text: string,
-        private severity: string,
-        private contents: string
-      ) {
+        private severity: string      ) {
         super(label, vscode.TreeItemCollapsibleState.None);
       }
 
@@ -25,12 +21,10 @@ export class Alarm extends vscode.TreeItem {
 }
 
 export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
-    private treeView: vscode.TreeView<{}>;
 
-    constructor(private logger: vscode.OutputChannel, private context?: vscode.ExtensionContext) {
+    constructor(private context?: vscode.ExtensionContext) {
         this.registerCommands();
         this.refresh();
-        this.treeView = vscode.window.createTreeView('c8yAlarms', { treeDataProvider: this });
 
         vscode.workspace.onDidChangeConfiguration(async e => {
 			if(e.affectsConfiguration('softwareag.c8yAlarms.enabled')) {
@@ -51,7 +45,7 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
                 }),
 
 				vscode.commands.registerCommand('extension.c8yAlarms.openAlarm', async (element) => {
-					let setting: vscode.Uri = vscode.Uri.parse("untitled:" + element.id + ".json" );
+					const setting: vscode.Uri = vscode.Uri.parse("untitled:" + element.id + ".json" );
 					vscode.workspace.openTextDocument(setting)
 						.then(doc => {
 							vscode.window.showTextDocument(doc)
@@ -87,7 +81,7 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
         if(config.get("enabled") === true) {
             try {
                 config = vscode.workspace.getConfiguration('softwareag.c8y');
-                let url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01&resolved=false";
+                const url: string = config.get('url',"") + "alarm/alarms?dateFrom=1970-01-01&resolved=false";
     
                 const result = await axios.get(url, {
                     auth: {
@@ -97,11 +91,10 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
                 });
     
                 const alarms = result.data.alarms;
-                for(let alarm of alarms) {
+                for(const alarm of alarms) {
                     this.alarmList.push(new Alarm(
                         alarm.id,
-                        alarm.type, 
-                        alarm.type, 
+                        //alarm.type, 
                         alarm.text, 
                         alarm.severity,
                         JSON.stringify(alarm, null, 4)
@@ -109,6 +102,7 @@ export class CumulocityAlarmsView implements vscode.TreeDataProvider<Alarm> {
                 }
     
             } catch (error) {
+                // eslint-disable-next-line no-debugger
                 debugger;
             }
         }

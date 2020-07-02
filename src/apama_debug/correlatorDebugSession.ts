@@ -53,13 +53,15 @@ export class CorrelatorDebugSession extends DebugSession {
 		console.log("Correlator interface host: " + config.host.toString() + " port " + config.port.toString());
 		this.correlatorHttp = new CorrelatorHttpInterface(logger, config.host, config.port);
 		this.correlatorBreakPoints = {} as {[key:string] : string };
-		
+
 	}
 
 	/**
 	 * The 'initialize' request is the first request called by the frontend
 	 * to interrogate the features the debug adapter provides.
 	 */
+
+	// todo do we need args - should we be using them
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 		console.log("Initialize called");
 
@@ -88,23 +90,25 @@ export class CorrelatorDebugSession extends DebugSession {
 			localargs = localargs.concat(extraargs);
 		}
 		//console.log(localargs);
-		let correlator = new vscode.Task(
-		  {type: "shell", task: ""},
-		  "DebugCorrelator",
-		  "correlator",
-		  new vscode.ShellExecution(this.apamaEnv.getCorrelatorCmdline(),localargs),
-		  []
+		const correlator = new vscode.Task(
+			{type: "shell", task: ""},
+			"DebugCorrelator",
+			"correlator",
+			new vscode.ShellExecution(this.apamaEnv.getCorrelatorCmdline(),localargs),
+			[]
 		);
 		correlator.group = 'test';
 		return correlator;
-	  }
+	}
 	/**
 	 * Frontend requested that the application be launched
 	 */
-	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments) {
+	// todo do we need args - should we be using them
+
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<void> {
 
 		let folder = undefined;
-		//check for a single workspace 
+		//check for a single workspace
 		if( vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
 			folder = vscode.workspace.workspaceFolders[0];
 		}
@@ -113,10 +117,10 @@ export class CorrelatorDebugSession extends DebugSession {
 			folder = await vscode.window.showWorkspaceFolderPick();
 		}
 
-		
+
 		if (folder !== undefined) {
 
-			/* Disable this for the moment 
+			/* Disable this for the moment
 
 			// does workspace contain folders
 			// if yes - allow pick, check for deployed and then run
@@ -144,7 +148,7 @@ export class CorrelatorDebugSession extends DebugSession {
 
 				console.log("CHOICE");
 				console.log(result);
-				
+
 				if(result && result.indexOf("project") >= 0) {
 					projectDebug = true;
 					csm = false;
@@ -157,7 +161,7 @@ export class CorrelatorDebugSession extends DebugSession {
 				}
 			}
 
-			//pick deployed 
+			//pick deployed
 			const options: vscode.OpenDialogOptions = {
 				defaultUri: folder.uri,
 				canSelectMany: csm,
@@ -166,20 +170,20 @@ export class CorrelatorDebugSession extends DebugSession {
 				openLabel: ol,
 				filters: fil
 			};
-			
-			
+
+
 
 			let fileUri:vscode.Uri[]|undefined = await vscode.window.showOpenDialog(options);
 
 			*/
-			let projectDebug = false;
+			const projectDebug = false;
 
 			if( projectDebug ) {
 				//single file initially
 				//console.log("Project Debug started on host: " + this.config.host.toString() + " port " + this.config.port.toString());
 				//if (fileUri && fileUri[0]) {
 				//	console.log("Debug : " + fileUri[0].fsPath );
-				//	await vscode.tasks.executeTask(this.runCorrelator(['--config',fileUri[0].fsPath]));	
+				//	await vscode.tasks.executeTask(this.runCorrelator(['--config',fileUri[0].fsPath]));
 				//	await this.correlatorHttp.enableDebugging();
 				//	this.sendEvent(new InitializedEvent()); // We're ready to start recieving breakpoints
 				//	this.sendResponse(response);
@@ -189,7 +193,7 @@ export class CorrelatorDebugSession extends DebugSession {
 			{
 				//single file initially
 				console.log("Debug started on host: " + this.config.host.toString() + " port " + this.config.port.toString());
-				await vscode.tasks.executeTask(this.runCorrelator([]));	
+				await vscode.tasks.executeTask(this.runCorrelator([]));
 				await this.correlatorHttp.enableDebugging();
 				if (folder.uri.fsPath) {
 					//console.log("Debug File(s) : " + folder.uri.fsPath );
@@ -203,28 +207,28 @@ export class CorrelatorDebugSession extends DebugSession {
 			// Pause correlator while we wait for the configuration to finish, we want breakpoints to be set first
 			await this.correlatorHttp.pause();
 			console.log('Enable change handler: ', vscode.debug.breakpoints.length);
-			//now we can add a handler for changes in BP 
+			//now we can add a handler for changes in BP
 			vscode.debug.onDidChangeBreakpoints(async e => {
 				//console.log(`onDidChangeBreakpoints: a: ${e.added.length} r: ${e.removed.length} c: ${e.changed.length}`);
-				
-				if (e.added.length > 0) { 
+
+				if (e.added.length > 0) {
 					//console.log('Enable breakpoints: ', e.added.length);
-					for (let bp of e.added) {
+					for (const bp of e.added) {
 						if(bp instanceof vscode.SourceBreakpoint){
-							let bpLine = bp.location.range.start.line + 1;
+							const bpLine = bp.location.range.start.line + 1;
 							this.correlatorBreakPoints[bp.location.uri.fsPath +':'+ bpLine.toString()] = '-1';
 							//console.log("REQUESTING " + bp.location.uri.fsPath +':'+ bpLine.toString() );
-							let id:string = await this.correlatorHttp.setBreakpoint(bp.location.uri.fsPath, bpLine );
+							const id:string = await this.correlatorHttp.setBreakpoint(bp.location.uri.fsPath, bpLine );
 							this.correlatorBreakPoints[bp.location.uri.fsPath +':'+ bpLine.toString()] = id;
 							console.log("ADDED " + bp.location.uri.fsPath +':'+ bpLine.toString() + '==id==' + id );
 						}
 					}
 				}
 
-				if (e.removed.length > 0) { 
-					for (let bp of e.removed) {
+				if (e.removed.length > 0) {
+					for (const bp of e.removed) {
 						if(bp instanceof vscode.SourceBreakpoint){
-							let bpLine = bp.location.range.start.line + 1;
+							const bpLine = bp.location.range.start.line + 1;
 							//console.log("REMOVING " + bp.location.uri.fsPath +':'+ bpLine.toString() );
 							await this.correlatorHttp.deleteBreakpoint(this.correlatorBreakPoints[bp.location.uri.fsPath +':'+ bpLine.toString()]);
 							console.log("REMOVED " + bp.location.uri.fsPath +':'+ bpLine.toString() + '==id==' + this.correlatorBreakPoints[bp.location.uri.fsPath +':'+ bpLine.toString()] );
@@ -240,25 +244,25 @@ export class CorrelatorDebugSession extends DebugSession {
 	/**
 	 * Frontend requested that breakpoints be set
 	 * http://brickhousecodecamp.org/docs/vscode/code.visualstudio.com/docs/extensionAPI/api-debugging.html#_the-debug-adapter-protocol-in-a-nutshell
-	 * 
-	 * N.B. this request is repeated for each file with breakpoints 
-	 * 
-	 * we will clear and revalidate breakpoints for a file when this is called because otherwise we get into 
+	 *
+	 * N.B. this request is repeated for each file with breakpoints
+	 *
+	 * we will clear and revalidate breakpoints for a file when this is called because otherwise we get into
 	 * having to persist and maintain the lists - the correlator already does this so no need for us to do it.
 	 */
 	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
-		if (args.source.path) 
+		if (args.source.path)
 		{
 			const filePath = args.source.path;
 
-			let bpsToCheck: Number[] = [];
+			const bpsToCheck: number[] = [];
 
 			//Get the line numbers of the current request
 			//when restarting the change handler is not invoked as
-			//the break points persist in the debuf=g session (we reuse it) 
+			//the break points persist in the debuf=g session (we reuse it)
 			//so we need to re-add them -**but only if they are not already there**
-			for ( let lineNumber  of args.lines || [] ){
-				let currentKey: string = filePath +':'+ lineNumber.toString();
+			for ( const lineNumber  of args.lines || [] ){
+				//const currentKey: string = filePath +':'+ lineNumber.toString();
 				//console.log("Checking:" + currentKey );
 				bpsToCheck.push(lineNumber);
 			}
@@ -266,22 +270,22 @@ export class CorrelatorDebugSession extends DebugSession {
 			// Pull out all curren tbreakpoints in the correlator
 			let currentCorrelatorBreakpoints = await this.correlatorHttp.getAllSetBreakpoints();
 
-			//normally this will be incremental but upon restart we need to check 
+			//normally this will be incremental but upon restart we need to check
 			if( args.lines && args.lines.length > 0 && Object.keys(currentCorrelatorBreakpoints).length === 0 ) {
 				//iterate through them and add them to the correlator
-				for ( let lineNumber  of args.lines || [] ){
-					let currentKey: string = filePath +':'+ lineNumber.toString();
-					let id:string = await this.correlatorHttp.setBreakpoint(filePath, lineNumber );
+				for ( const lineNumber  of args.lines || [] ){
+					const currentKey: string = filePath +':'+ lineNumber.toString();
+					const id:string = await this.correlatorHttp.setBreakpoint(filePath, lineNumber );
 					this.correlatorBreakPoints[filePath +':'+ lineNumber.toString()] = id;
 					console.log("ADDED " + currentKey + '==id==' + id );
 				}
-				
+
 				//try again
 				currentCorrelatorBreakpoints = await this.correlatorHttp.getAllSetBreakpoints();
 			}
 
-			let currentCorrelatorBreakpointsById = currentCorrelatorBreakpoints.reduce(
-				(acc, breakpoint) => 
+			const currentCorrelatorBreakpointsById = currentCorrelatorBreakpoints.reduce(
+				(acc, breakpoint) =>
 				{
 				acc[breakpoint.id] = breakpoint;
 				return acc;
@@ -290,19 +294,19 @@ export class CorrelatorDebugSession extends DebugSession {
 			// Compare the attempted and the actually set to determine whether they've actually been set (and on which line)
 			//I am verifying breakpoints that have actually been set in the correlator only - so I iterate through the real ones
 			//just making sure we respond to the ones to check specifically (others will have existing state)
-			let bps : DebugProtocol.Breakpoint[] = [];
-			for ( let id in currentCorrelatorBreakpointsById) {
-				let bp = currentCorrelatorBreakpointsById[id];
+			const bps : DebugProtocol.Breakpoint[] = [];
+			for ( const id in currentCorrelatorBreakpointsById) {
+				const bp = currentCorrelatorBreakpointsById[id];
 				//For this source file only!
 				if ( bp.filename === filePath ) {
 
 					if( bpsToCheck.includes(bp.line) ) {
-						let index = bpsToCheck.findIndex((element) => element === bp.line);
+						const index = bpsToCheck.findIndex((element) => element === bp.line);
 						delete bpsToCheck[index];
 						console.log('CONFIRMED:'+ bp.filename + '==id==' + 	this.correlatorBreakPoints[bp.filename +':'+ bp.line.toString()]);
-						let src:DebugProtocol.Source = {name:bp.id,path:bp.filename};
-						bps.push({id:+bp.id,verified:true,source:src});					
-					} 
+						const src:DebugProtocol.Source = {name:bp.id,path:bp.filename};
+						bps.push({id:+bp.id,verified:true,source:src});
+					}
 				}
 			}
 
@@ -312,7 +316,7 @@ export class CorrelatorDebugSession extends DebugSession {
 
 			// Send the response with the list of breakpoints
 			this.sendResponse(response);
-				
+
 		} else {
 			console.error("Unable to set breakpoints, no file path provided");
 			this.sendResponse(response);
@@ -322,6 +326,7 @@ export class CorrelatorDebugSession extends DebugSession {
 	/**
 	 * Indication that the frontend is done setting breakpoints etc
 	 */
+	// todo do we need args - should we be using them
 	protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
 		console.log('Configuration done');
 		this.correlatorHttp.resume()
@@ -330,11 +335,11 @@ export class CorrelatorDebugSession extends DebugSession {
 	}
 
 
-	protected async waitUntilTaskEnds(taskName: string) {
+	protected async waitUntilTaskEnds(taskName: string): Promise<void> {
 		await this.correlatorHttp.resume();
 		await this.correlatorHttp.disableDebugging();
 		return new Promise<void>(resolve => {
-			let disposable = vscode.tasks.onDidEndTask(e => {
+			const disposable = vscode.tasks.onDidEndTask(e => {
 				//console.log("TASK " + e.execution.task.name + " ended");
 				if (e.execution.task.name === taskName) {
 					disposable.dispose();
@@ -347,15 +352,15 @@ export class CorrelatorDebugSession extends DebugSession {
 	/**
 	 * Frontend requested that the application terminate
 	 */
-	protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments) {
-		try 
+	protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments) : Promise<void> {
+		try
 		{
 			console.log("Stop requested to port " + this.config.port.toString());
 			this.manager.run('.',['-s','debug_stop','-p',this.config.port.toString()]);
 			await this.waitUntilTaskEnds("DebugCorrelator");
 			//console.log("STOPPED " + this.config.port.toString());
 		}
-		catch (e) 
+		catch (e)
 		{
 			//ignore
 		}
@@ -470,7 +475,7 @@ export class CorrelatorDebugSession extends DebugSession {
 	}
 
 	private async waitForCorrelatorPause() {
-		let response = await this.correlatorHttp.awaitPause();
+		const response = await this.correlatorHttp.awaitPause();
 		this.sendEvent(new StoppedEvent(response.reason, response.contextid));
 	}
 

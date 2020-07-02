@@ -1,17 +1,15 @@
 import { OutputChannel, window } from 'vscode';
-import { promisify } from 'util';
-import { ChildProcess, spawn } from 'child_process';
-
-const exec = promisify(require('child_process').exec);
+import { exec,ChildProcess, spawn } from 'child_process';
 
 export class ApamaRunner {
 
-  stdout: string = '';
-  stderr: string = '';
+  stdout = '';
+  stderr = '';
 
   constructor(public name: string, public command: string, private logger: OutputChannel) {
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async run(workingDir: string, args: string[]): Promise<any> {
     //if fails returns promise.reject including err 
     return await exec(this.command + ' ' + args.join(' '), { cwd: workingDir });
@@ -21,8 +19,8 @@ export class ApamaRunner {
 
 export class ApamaAsyncRunner {
 
-  stdout: string = '';
-  stderr: string = '';
+  stdout = '';
+  stderr = '';
   child?: ChildProcess;
 
   constructor(public name: string, public command: string, private logger: OutputChannel) {
