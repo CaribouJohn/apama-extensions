@@ -72,7 +72,7 @@ export class ApamaDebugConfigurationProvider implements DebugConfigurationProvid
             }).listen(0);
         }
         else {
-            console.log("Reusing previous instance")
+            console.log("Reusing previous instance");
         }
 
         config.debugServer = (<Net.AddressInfo>this._server.address()).port;
