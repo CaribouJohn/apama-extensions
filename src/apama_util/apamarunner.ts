@@ -1,5 +1,8 @@
 import { OutputChannel, window } from 'vscode';
-import { exec,ChildProcess, spawn } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
+import { promisify } from 'util';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const exec = promisify(require('child_process').exec);
 
 export class ApamaRunner {
 
@@ -10,7 +13,7 @@ export class ApamaRunner {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async run(workingDir: string, args: string[]): Promise<any> {
+   async run(workingDir: string, args: string[]): Promise<any> {
     //if fails returns promise.reject including err 
     return await exec(this.command + ' ' + args.join(' '), { cwd: workingDir });
   }

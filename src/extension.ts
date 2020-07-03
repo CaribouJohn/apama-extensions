@@ -50,7 +50,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const c8View = new CumulocityView(apamaEnv, logger, context);
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const c8AlarmsView = new CumulocityAlarmsView(logger, context);
+		const c8AlarmsView = new CumulocityAlarmsView(context);
 	}
 
 	//EPL Applications view is still WIP - needs more work 
