@@ -13,6 +13,7 @@ export interface ApamaTreeItem {
 	instance: boolean;
 	ws: WorkspaceFolder;
 	apama_project: ApamaRunner;
+	resourceDir: string;
 }
 
 export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
@@ -22,7 +23,8 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 		public readonly label: string,
     public readonly fsDir: string,
 		public ws: WorkspaceFolder,
-		public apama_project: ApamaRunner
+		public apama_project: ApamaRunner,
+		public resourceDir: string
     ) {
 		super(label, TreeItemCollapsibleState.Collapsed);
 	}
@@ -50,22 +52,31 @@ export class ApamaProjectWorkspace extends TreeItem implements ApamaTreeItem {
 				path.relative(this.ws.uri.fsPath, path.dirname(project.fsPath)),
 				path.dirname(project.fsPath),
 				this.ws,
-				this.apama_project
+				this.apama_project,
+				this.resourceDir
 			);
 			result.push(current);
 		}
 		return result;
 	}
+
+	iconPath = {
+        light: path.join(this.resourceDir, 'light', 'folder.svg'),
+        dark: path.join(this.resourceDir, 'dark', 'folder.svg')
+    };
+
+
 }
 
 
 export class ApamaProject extends TreeItem  implements ApamaTreeItem {
 	constructor(
 		public logger:OutputChannel,
-    public readonly label: string,
+		public readonly label: string,
 		public readonly fsDir: string,
 		public ws: WorkspaceFolder,
-		public apama_project: ApamaRunner
+		public apama_project: ApamaRunner,
+		public resourceDir: string
     ) {
 		super(label,TreeItemCollapsibleState.Collapsed);
 	}
@@ -97,13 +108,13 @@ export class ApamaProject extends TreeItem  implements ApamaTreeItem {
 
 					if( indentation === 12) {
 						previousBundle.instance = true; //TODO : this is wrong the thing im creating here is an instance...
-						previousBundle.items.push(new BundleItem(this.logger, current, this.fsDir,this.ws,this.apama_project));
+						previousBundle.items.push(new BundleItem(this.logger, current, this.fsDir,this.ws,this.apama_project,this.resourceDir));
 					} else {
 						if( previousBundle !== undefined) {
 							items.push( previousBundle );
 						}
 						//this.logger.appendLine(`Creating : ${current}`);
-						previousBundle = new BundleItem(this.logger, current, this.fsDir,this.ws,this.apama_project);
+						previousBundle = new BundleItem(this.logger, current, this.fsDir,this.ws,this.apama_project,this.resourceDir);
 					}
 
 				}
@@ -124,6 +135,12 @@ export class ApamaProject extends TreeItem  implements ApamaTreeItem {
 		//this.logger.appendLine(`Bundles Added : ${this.label} => ${items.length}`);
 		return items;
 	}
+
+	iconPath = {
+        light: path.join(this.resourceDir, 'dark', 'project.svg'),
+        dark: path.join(this.resourceDir, 'dark', 'project.svg')
+    };
+
 }
 
 export class BundleItem extends TreeItem implements ApamaTreeItem {
@@ -131,10 +148,19 @@ export class BundleItem extends TreeItem implements ApamaTreeItem {
 							public readonly label: string,
 							public fsDir: string,
 							public ws: WorkspaceFolder,
-							public apama_project: ApamaRunner) {
+							public apama_project: ApamaRunner,
+							public resourceDir: string) 
+	{
 		super(label, TreeItemCollapsibleState.Collapsed);
 	}
+
 	items: BundleItem[] = [];
 	contextValue: string = 'bundle';
 	instance: boolean = false;
+
+	iconPath = {
+        light: path.join(this.resourceDir, 'light', 'code.svg'),
+        dark: path.join(this.resourceDir, 'dark', 'code.svg')
+    }; 
+
 }
