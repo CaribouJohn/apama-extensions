@@ -3,7 +3,7 @@
   "name": "apama-extensions",
   "displayName": "apama-extensions",
   "description": "An Extension for EPL applications",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/ApamaCommunity/apama-vscode-extensions"
