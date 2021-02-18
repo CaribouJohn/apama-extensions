@@ -124,13 +124,18 @@ To use the diagnostics capability you must have version 10.5.3 or later of Apama
 
 ## Known Issues
 
-There are a number of issues that will be fixed, but please do raise issues in <https://github.com/CaribouJohn/vscode-apama-extensions/issues> if you come accross things. I am very open to pull requests to fix things also :)
+There are a number of issues that will be fixed, but please do raise issues via GitHub if you come accross things.
+Pull requests are also very welcome!
 
 ## Development
 
 Users are welcome to make pull requests with fixes and enhancements but I reserve the right to control what and when goes into released versions of the extention.
 
 ## Release Notes
+
+## v1.2.1
+
+* First release under ApamaCommunity.
 
 ## v1.0.1 (June 2020)
 
