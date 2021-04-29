@@ -343,7 +343,7 @@
     "@types/shelljs": "^0.8.8",
     "@types/vscode": "^1.45.1",
     "@types/xmldom": "^0.1.29",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "glob": "^7.1.6",
     "js-yaml": "^3.14.0",
     "jsonschema": "^1.2.6",
